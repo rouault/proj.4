@@ -4,48 +4,36 @@
 language: c
 
 compiler:
-  - gcc
   - clang
 
+before_install:
+- sudo apt-get update -qq
+- sudo apt-get install -qq wine swig curl
+- sudo apt-get install -qq mingw32
+
 install:
-# cmake build
-  - mkdir build_cmake
-  - cd build_cmake
-  - cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/proj_cmake_install
-  - make -j3
-  - make install
-  - find /tmp/proj_cmake_install
-  - cd ..
 # autoconf build
   - mkdir build_autoconf
   - cd build_autoconf
-  - ../configure --prefix=/tmp/proj_autoconf_install
+  - ../configure --host=i586-mingw32msvc --prefix=/tmp/proj_autoconf_install
   - make -j3
   - make install
   - find /tmp/proj_autoconf_install
-  - make check
+#  - make check
   - cd ..
 # Now with grids
   - wget http://download.osgeo.org/proj/proj-datumgrid-1.5.zip
   - cd nad
   - unzip -o ../proj-datumgrid-1.5.zip
   - cd ..
-# cmake build with grids
-  - mkdir build_cmake_nad
-  - cd build_cmake_nad
-  - cmake .. -DCMAKE_INSTALL_PREFIX=/tmp/proj_cmake_install_nad
-  - make -j3
-  - make install
-  - find /tmp/proj_cmake_install_nad
-  - cd ..
 # autoconf build with grids
   - mkdir build_autoconf_nad
   - cd build_autoconf_nad
-  - ../configure --prefix=/tmp/proj_autoconf_install_nad
+  - ../configure --host=i586-mingw32msvc --prefix=/tmp/proj_autoconf_install_nad
   - make -j3
   - make install
   - find /tmp/proj_autoconf_install_nad
-  - make check
+#  - make check
   - cd ..
 
 script:
