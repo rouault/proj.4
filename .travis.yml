@@ -1,13 +1,11 @@
 # This is the config file for building proj.4 and running its test suite
 # with Travis-ci.org
 
-os: osx
+language: objective-c
 
-language: c
-
-#compiler:
-#  - gcc
-#  - clang
+compiler:
+  - gcc
+  - clang
 
 install:
 # cmake build
