@@ -15,7 +15,7 @@ install:
 # autoconf build
   - mkdir build_autoconf
   - cd build_autoconf
-  - ../configure --host=i586-mingw32msvc --prefix=/tmp/proj_autoconf_install
+  - CC=i586-mingw32msvc-gcc LD=i586-mingw32msvc-ld ../configure --host=i586-mingw32msvc --prefix=/tmp/proj_autoconf_install
   - make -j3
   - make install
   - find /tmp/proj_autoconf_install
