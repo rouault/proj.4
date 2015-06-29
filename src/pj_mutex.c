@@ -1,6 +1,4 @@
 /******************************************************************************
- * $Id: pj_transform.c 1504 2009-01-06 02:11:57Z warmerdam $
- *
  * Project:  PROJ.4
  * Purpose:  Mutex (thread lock) functions.
  * Author:   Frank Warmerdam, warmerdam@pobox.com
@@ -30,9 +28,13 @@
 
 /* projects.h and windows.h conflict - avoid this! */
 
+#if defined(MUTEX_pthread) && !defined(_XOPEN_SOURCE)
+// For pthread_mutexattr_settype
+#define _XOPEN_SOURCE 500
+#endif
+
 #ifndef _WIN32
 #include <projects.h>
-PJ_CVSID("$Id: pj_transform.c 1504 2009-01-06 02:11:57Z warmerdam $");
 #else
 #include <proj_api.h>
 #endif
