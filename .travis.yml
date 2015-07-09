@@ -33,7 +33,7 @@ install:
   - make -j3
   - make install
   - find /tmp/proj_autoconf_install_nad
-  - make check
+#  - make check
   - cd src
   - make multistresstest.exe
   - make test228.exe
