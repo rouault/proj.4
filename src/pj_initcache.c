@@ -75,7 +75,7 @@ void pj_clear_initcache()
     {
         int i;
 
-        pj_acquire_lock();
+        pj_acquire_lock_initcache();
 
         for( i = 0; i < cache_count; i++ )
         {
@@ -97,7 +97,7 @@ void pj_clear_initcache()
         cache_key = NULL;
         cache_paralist = NULL;
 
-        pj_release_lock();
+        pj_release_lock_initcache();
     }
 }
 
@@ -111,19 +111,23 @@ paralist *pj_search_initcache( const char *filekey )
 
 {
     int i;
+    const paralist *result_to_duplicate = NULL;
     paralist *result = NULL;
 
-    pj_acquire_lock();
+    pj_acquire_lock_initcache();
 
-    for( i = 0; result == NULL && i < cache_count; i++)
+    for( i = 0; result_to_duplicate == NULL && i < cache_count; i++)
     {
         if( strcmp(filekey,cache_key[i]) == 0 )
 	{
-            result = pj_clone_paralist( cache_paralist[i] );
+            result_to_duplicate = cache_paralist[i];
 	}
     }
 
-    pj_release_lock();
+    pj_release_lock_initcache();
+
+    if( result_to_duplicate )
+        result = pj_clone_paralist( result_to_duplicate );
 
     return result;
 }
@@ -137,7 +141,7 @@ paralist *pj_search_initcache( const char *filekey )
 void pj_insert_initcache( const char *filekey, const paralist *list )
 
 {
-    pj_acquire_lock();
+    pj_acquire_lock_initcache();
 
     /* 
     ** Grow list if required.
@@ -172,6 +176,6 @@ void pj_insert_initcache( const char *filekey, const paralist *list )
 
     cache_count++;
 
-    pj_release_lock();
+    pj_release_lock_initcache();
 }
 

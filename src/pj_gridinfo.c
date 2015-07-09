@@ -121,10 +121,10 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
     if( gi == NULL || gi->ct == NULL )
         return 0;
 
-    pj_acquire_lock();
+    pj_acquire_lock_gridinfo();
     if( gi->ct->cvs != NULL )
     {
-        pj_release_lock();
+        pj_release_lock_gridinfo();
         return 1;
     }
 
@@ -143,7 +143,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
         if( fid == NULL )
         {
             pj_ctx_set_errno( ctx, -38 );
-            pj_release_lock();
+            pj_release_lock_gridinfo();
             return 0;
         }
 
@@ -152,7 +152,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
         pj_ctx_fclose( ctx, fid );
 
         gi->ct->cvs = ct_tmp.cvs;
-        pj_release_lock();
+        pj_release_lock_gridinfo();
 
         return result;
     }
@@ -170,7 +170,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
         if( fid == NULL )
         {
             pj_ctx_set_errno( ctx, -38 );
-            pj_release_lock();
+            pj_release_lock_gridinfo();
             return 0;
         }
 
@@ -180,7 +180,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
 
         gi->ct->cvs = ct_tmp.cvs;
 
-        pj_release_lock();
+        pj_release_lock_gridinfo();
         return result;
     }
 
@@ -202,7 +202,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
         if( fid == NULL )
         {
             pj_ctx_set_errno( ctx, -38 );
-            pj_release_lock();
+            pj_release_lock_gridinfo();
             return 0;
         }
 
@@ -213,7 +213,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
         if( row_buf == NULL || ct_tmp.cvs == NULL )
         {
             pj_ctx_set_errno( ctx, -38 );
-            pj_release_lock();
+            pj_release_lock_gridinfo();
             return 0;
         }
 
@@ -254,7 +254,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
         pj_ctx_fclose( ctx, fid );
 
         gi->ct->cvs = ct_tmp.cvs;
-        pj_release_lock();
+        pj_release_lock_gridinfo();
 
         return 1;
     }
@@ -280,7 +280,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
         if( fid == NULL )
         {
             pj_ctx_set_errno( ctx, -38 );
-            pj_release_lock();
+            pj_release_lock_gridinfo();
             return 0;
         }
 
@@ -291,7 +291,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
         if( row_buf == NULL || ct_tmp.cvs == NULL )
         {
             pj_ctx_set_errno( ctx, -38 );
-            pj_release_lock();
+            pj_release_lock_gridinfo();
             return 0;
         }
 
@@ -308,7 +308,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
                 pj_dalloc( row_buf );
                 pj_dalloc( ct_tmp.cvs );
                 pj_ctx_set_errno( ctx, -38 );
-                pj_release_lock();
+                pj_release_lock_gridinfo();
                 return 0;
             }
 
@@ -336,7 +336,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
 
         gi->ct->cvs = ct_tmp.cvs;
 
-        pj_release_lock();
+        pj_release_lock_gridinfo();
         return 1;
     }
 
@@ -353,7 +353,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
         if( fid == NULL )
         {
             pj_ctx_set_errno( ctx, -38 );
-            pj_release_lock();
+            pj_release_lock_gridinfo();
             return 0;
         }
 
@@ -363,7 +363,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
         if( ct_tmp.cvs == NULL )
         {
             pj_ctx_set_errno( ctx, -38 );
-            pj_release_lock();
+            pj_release_lock_gridinfo();
             return 0;
         }
 
@@ -371,7 +371,7 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
             != (size_t)words )
         {
             pj_dalloc( ct_tmp.cvs );
-            pj_release_lock();
+            pj_release_lock_gridinfo();
             return 0;
         }
 
@@ -380,13 +380,13 @@ int pj_gridinfo_load( projCtx ctx, PJ_GRIDINFO *gi )
 
         pj_ctx_fclose( ctx, fid );
         gi->ct->cvs = ct_tmp.cvs;
-        pj_release_lock();
+        pj_release_lock_gridinfo();
         return 1;
     }
 
     else
     {
-        pj_release_lock();
+        pj_release_lock_gridinfo();
         return 0;
     }
 }

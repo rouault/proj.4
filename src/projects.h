@@ -513,6 +513,18 @@ struct PJ_PRIME_MERIDIANS  *pj_get_prime_meridians_ref( void );
 double pj_atof( const char* nptr );
 double pj_strtod( const char *nptr, char **endptr );
 
+/* The below lock methods are internal only. Do not use in your code */
+void pj_acquire_lock_default_ctxt(void);
+void pj_release_lock_default_ctxt(void);
+void pj_acquire_lock_initcache(void);
+void pj_release_lock_initcache(void);
+void pj_acquire_lock_gridinfo(void);
+void pj_release_lock_gridinfo(void);
+void pj_acquire_lock_gridlist(void);
+void pj_release_lock_gridlist(void);
+void pj_acquire_lock_gridcatalog(void);
+void pj_release_lock_gridcatalog(void);
+
 #ifdef __cplusplus
 }
 #endif

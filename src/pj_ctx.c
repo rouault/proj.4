@@ -60,7 +60,7 @@ void pj_set_ctx( projPJ pj, projCtx ctx )
 projCtx pj_get_default_ctx()
 
 {
-    pj_acquire_lock();
+    pj_acquire_lock_default_ctxt();
 
     if( !default_context_initialized )
     {
@@ -80,7 +80,7 @@ projCtx pj_get_default_ctx()
         default_context_initialized = 1;
     }
 
-    pj_release_lock();
+    pj_release_lock_default_ctxt();
 
     return &default_context;
 }

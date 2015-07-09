@@ -84,6 +84,86 @@ void pj_cleanup_lock()
 {
 }
 
+/************************************************************************/
+/*                     pj_acquire_lock_default_ctxt()                   */
+/************************************************************************/
+
+void pj_acquire_lock_default_ctxt()
+{
+}
+
+/************************************************************************/
+/*                     pj_release_lock_default_ctxt()                   */
+/************************************************************************/
+
+void pj_release_lock_default_ctxt()
+{
+}
+
+/************************************************************************/
+/*                     pj_acquire_lock_initcache()                      */
+/************************************************************************/
+
+void pj_acquire_lock_initcache()
+{
+}
+
+/************************************************************************/
+/*                     pj_release_lock_initcache()                      */
+/************************************************************************/
+
+void pj_release_lock_initcache()
+{
+}
+
+/************************************************************************/
+/*                     pj_acquire_lock_gridinfo()                       */
+/************************************************************************/
+
+void pj_acquire_lock_gridinfo()
+{
+}
+
+/************************************************************************/
+/*                     pj_release_lock_gridinfo()                       */
+/************************************************************************/
+
+void pj_release_lock_gridinfo()
+{
+}
+
+/************************************************************************/
+/*                     pj_acquire_lock_gridlist()                       */
+/************************************************************************/
+
+void pj_acquire_lock_gridlist()
+{
+}
+
+/************************************************************************/
+/*                     pj_release_lock_gridlist()                       */
+/************************************************************************/
+
+void pj_release_lock_gridlist()
+{
+}
+
+/************************************************************************/
+/*                    pj_acquire_lock_gridcatalog()                     */
+/************************************************************************/
+
+void pj_acquire_lock_gridcatalog()
+{
+}
+
+/************************************************************************/
+/*                    pj_release_lock_gridcatalog()                     */
+/************************************************************************/
+
+void pj_release_lock_gridcatalog()
+{
+}
+
 #endif // def MUTEX_stub
 
 /************************************************************************/
@@ -152,6 +232,136 @@ void pj_cleanup_lock()
 {
 }
 
+/************************************************************************/
+/*                     pj_acquire_lock_default_ctxt()                   */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Acquire the lock for pj_get_default_ctx()                       */
+/************************************************************************/
+
+static pthread_mutex_t pj_default_ctxt_lock = PTHREAD_MUTEX_INITIALIZER;
+
+void pj_acquire_lock_default_ctxt()
+{
+    pthread_mutex_lock( &pj_default_ctxt_lock);
+}
+
+/************************************************************************/
+/*                     pj_release_lock_default_ctxt()                   */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Release the lock for pj_get_default_ctx()                       */
+/************************************************************************/
+
+void pj_release_lock_default_ctxt()
+{
+    pthread_mutex_unlock( &pj_default_ctxt_lock);
+}
+
+/************************************************************************/
+/*                     pj_acquire_lock_initcache()                      */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Acquire the lock used in pj_initcache.c                         */
+/************************************************************************/
+
+static pthread_mutex_t pj_lock_initcache = PTHREAD_MUTEX_INITIALIZER;
+
+void pj_acquire_lock_initcache()
+{
+    pthread_mutex_lock( &pj_lock_initcache);
+}
+
+/************************************************************************/
+/*                     pj_release_lock_initcache()                      */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Release the lock used in pj_initcache.c                         */
+/************************************************************************/
+
+void pj_release_lock_initcache()
+{
+    pthread_mutex_unlock( &pj_lock_initcache);
+}
+
+/************************************************************************/
+/*                     pj_acquire_lock_gridinfo()                       */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Acquire the lock used in pj_gridinfo.c                          */
+/************************************************************************/
+
+static pthread_mutex_t pj_lock_gridinfo = PTHREAD_MUTEX_INITIALIZER;
+
+void pj_acquire_lock_gridinfo()
+{
+    pthread_mutex_lock( &pj_lock_gridinfo);
+}
+
+/************************************************************************/
+/*                     pj_release_lock_gridinfo()                       */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Release the lock used in pj_gridinfo.c                          */
+/************************************************************************/
+
+void pj_release_lock_gridinfo()
+{
+    pthread_mutex_unlock( &pj_lock_gridinfo);
+}
+
+/************************************************************************/
+/*                     pj_acquire_lock_gridlist()                       */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Acquire the lock used in pj_gridlist.c                          */
+/************************************************************************/
+
+static pthread_mutex_t pj_lock_gridlist = PTHREAD_MUTEX_INITIALIZER;
+
+void pj_acquire_lock_gridlist()
+{
+    pthread_mutex_lock( &pj_lock_gridlist);
+}
+
+/************************************************************************/
+/*                     pj_release_lock_gridlist()                       */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Release the lock used in pj_gridlist.c                          */
+/************************************************************************/
+
+void pj_release_lock_gridlist()
+{
+    pthread_mutex_unlock( &pj_lock_gridlist);
+}
+
+/************************************************************************/
+/*                     pj_acquire_lock_gridcatalog()                    */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Acquire the lock used in pj_gridcatalog.c                       */
+/************************************************************************/
+
+static pthread_mutex_t pj_lock_gridcatalog = PTHREAD_MUTEX_INITIALIZER;
+
+void pj_acquire_lock_gridcatalog()
+{
+    pthread_mutex_lock( &pj_lock_gridcatalog);
+}
+
+/************************************************************************/
+/*                     pj_release_lock_gridcatalog()                    */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Release the lock used in pj_gridcatalog.c                       */
+/************************************************************************/
+
+void pj_release_lock_gridcatalog()
+{
+    pthread_mutex_unlock( &pj_lock_gridcatalog);
+}
+
 #endif // def MUTEX_pthread
 
 /************************************************************************/
@@ -160,21 +370,46 @@ void pj_cleanup_lock()
 /* ==================================================================== */
 /************************************************************************/
 
+/* InitializeCriticalSectionAndSpinCount requires _WIN32_WINNT >= 0x403 */
+#define _WIN32_WINNT 0x0500
+
 #ifdef MUTEX_win32
 
 #include <windows.h>
 
-static HANDLE mutex_lock = NULL;
+static void pj_cleanup_lock_default_ctxt();
+static void pj_cleanup_lock_initcache();
+static void pj_cleanup_lock_gridinfo();
+static void pj_cleanup_lock_gridlist();
+static void pj_cleanup_lock_gridcatalog();
 
 /************************************************************************/
-/*                            pj_init_lock()                            */
+/*                         pj_spin_lock()                               */
 /************************************************************************/
 
-static void pj_init_lock()
-
+static volatile long pj_spin_flag = 0;
+static void pj_spin_lock()
 {
-    if( mutex_lock == NULL )
-        mutex_lock = CreateMutex( NULL, FALSE, NULL );
+    while( InterlockedExchange(&pj_spin_flag, 1) )
+    {
+        while( pj_spin_flag )
+        {
+#ifdef YieldProcessor
+            YieldProcessor();
+#else
+            Sleep(0);
+#endif
+        }
+    }
+}
+
+/************************************************************************/
+/*                         pj_spin_unlock()                             */
+/************************************************************************/
+
+static void pj_spin_unlock()
+{
+    pj_spin_flag = 0;
 }
 
 /************************************************************************/
@@ -183,12 +418,16 @@ static void pj_init_lock()
 /*      Acquire the PROJ.4 lock.                                        */
 /************************************************************************/
 
+static HANDLE pj_mutex_lock = NULL;
+
 void pj_acquire_lock()
 {
-    if( mutex_lock == NULL )
-        pj_init_lock();
+    pj_spin_lock();
+    if( pj_mutex_lock == NULL )
+        pj_mutex_lock = CreateMutex( NULL, FALSE, NULL );
+    pj_spin_unlock();
 
-    WaitForSingleObject( mutex_lock, INFINITE );
+    WaitForSingleObject( pj_mutex_lock, INFINITE );
 }
 
 /************************************************************************/
@@ -199,21 +438,261 @@ void pj_acquire_lock()
 
 void pj_release_lock()
 {
-    if( mutex_lock == NULL )
-        pj_init_lock();
-    else
-        ReleaseMutex( mutex_lock );
+    ReleaseMutex( pj_mutex_lock );
 }
 
 /************************************************************************/
 /*                          pj_cleanup_lock()                           */
 /************************************************************************/
+
 void pj_cleanup_lock()
 {
-    if( mutex_lock != NULL )
+    if( pj_mutex_lock != NULL )
     {
-        CloseHandle( mutex_lock );
-        mutex_lock = NULL;
+        CloseHandle( pj_mutex_lock );
+        pj_mutex_lock = NULL;
+    }
+    pj_cleanup_lock_default_ctxt();
+    pj_cleanup_lock_initcache();
+}
+
+/************************************************************************/
+/*                     pj_acquire_lock_default_ctxt()                   */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Acquire the lock for pj_get_default_ctx()                       */
+/************************************************************************/
+
+static CRITICAL_SECTION* pj_cs_default_ctxt = NULL;
+
+void pj_acquire_lock_default_ctxt()
+{
+    pj_spin_lock();
+    if( pj_cs_default_ctxt == NULL )
+    {
+        pj_cs_default_ctxt = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
+        InitializeCriticalSectionAndSpinCount(pj_cs_default_ctxt, 4000);
+    }
+    pj_spin_unlock();
+
+    EnterCriticalSection(pj_cs_default_ctxt);
+}
+
+/************************************************************************/
+/*                     pj_release_lock_default_ctxt()                   */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Release the lock for pj_get_default_ctx()                       */
+/************************************************************************/
+
+void pj_release_lock_default_ctxt()
+{
+    LeaveCriticalSection(pj_cs_default_ctxt);
+}
+
+/************************************************************************/
+/*                     pj_cleanup_lock_default_ctxt()                   */
+/************************************************************************/
+
+static void pj_cleanup_lock_default_ctxt()
+{
+    if( pj_cs_default_ctxt != NULL )
+    {
+        DeleteCriticalSection( pj_cs_default_ctxt );
+        free( pj_cs_default_ctxt );
+        pj_cs_default_ctxt = NULL;
+    }
+}
+
+/************************************************************************/
+/*                     pj_acquire_lock_initcache()                      */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Acquire the lock used in pj_initcache.c                         */
+/************************************************************************/
+
+static CRITICAL_SECTION* pj_cs_initcache = NULL;
+
+void pj_acquire_lock_initcache()
+{
+    pj_spin_lock();
+    if( pj_cs_initcache == NULL )
+    {
+        pj_cs_initcache = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
+        InitializeCriticalSectionAndSpinCount(pj_cs_initcache, 4000);
+    }
+    pj_spin_unlock();
+
+    EnterCriticalSection(pj_cs_initcache);
+}
+
+/************************************************************************/
+/*                     pj_release_lock_initcache()                      */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Release the lock used in pj_initcache.c                         */
+/************************************************************************/
+
+void pj_release_lock_initcache()
+{
+    LeaveCriticalSection(pj_cs_initcache);
+}
+
+/************************************************************************/
+/*                     pj_cleanup_lock_initcache()                      */
+/************************************************************************/
+
+static void pj_cleanup_lock_initcache()
+{
+    if( pj_cs_initcache != NULL )
+    {
+        DeleteCriticalSection( pj_cs_initcache );
+        free( pj_cs_initcache );
+        pj_cs_initcache = NULL;
+    }
+}
+
+/************************************************************************/
+/*                     pj_acquire_lock_gridinfo()                       */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Acquire the lock used in pj_gridinfo.c                          */
+/************************************************************************/
+
+static CRITICAL_SECTION* pj_cs_gridinfo = NULL;
+
+void pj_acquire_lock_gridinfo()
+{
+    pj_spin_lock();
+    if( pj_cs_gridinfo == NULL )
+    {
+        pj_cs_gridinfo = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
+        InitializeCriticalSectionAndSpinCount(pj_cs_gridinfo, 4000);
+    }
+    pj_spin_unlock();
+
+    EnterCriticalSection(pj_cs_gridinfo);
+}
+
+/************************************************************************/
+/*                     pj_release_lock_gridinfo()                       */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Release the lock used in pj_gridinfo.c                          */
+/************************************************************************/
+
+void pj_release_lock_gridinfo()
+{
+    LeaveCriticalSection(pj_cs_gridinfo);
+}
+
+/************************************************************************/
+/*                     pj_cleanup_lock_gridinfo()                       */
+/************************************************************************/
+
+static void pj_cleanup_lock_gridinfo()
+{
+    if( pj_cs_gridinfo != NULL )
+    {
+        DeleteCriticalSection( pj_cs_gridinfo );
+        free( pj_cs_gridinfo );
+        pj_cs_gridinfo = NULL;
+    }
+}
+
+/************************************************************************/
+/*                     pj_acquire_lock_gridlist()                       */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Acquire the lock used in pj_gridlist.c                          */
+/************************************************************************/
+
+static CRITICAL_SECTION* pj_cs_gridlist = NULL;
+
+void pj_acquire_lock_gridlist()
+{
+    pj_spin_lock();
+    if( pj_cs_gridlist == NULL )
+    {
+        pj_cs_gridlist = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
+        InitializeCriticalSectionAndSpinCount(pj_cs_gridlist, 4000);
+    }
+    pj_spin_unlock();
+
+    EnterCriticalSection(pj_cs_gridlist);
+}
+
+/************************************************************************/
+/*                     pj_release_lock_gridlist()                       */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Release the lock used in pj_gridlist.c                          */
+/************************************************************************/
+
+void pj_release_lock_gridlist()
+{
+    LeaveCriticalSection(pj_cs_gridlist);
+}
+
+/************************************************************************/
+/*                     pj_cleanup_lock_gridlist()                       */
+/************************************************************************/
+
+static void pj_cleanup_lock_gridlist()
+{
+    if( pj_cs_gridlist != NULL )
+    {
+        DeleteCriticalSection( pj_cs_gridlist );
+        free( pj_cs_gridlist );
+        pj_cs_gridlist = NULL;
+    }
+}
+
+/************************************************************************/
+/*                    pj_acquire_lock_gridcatalog()                     */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Acquire the lock used in pj_gridcatalog.c                       */
+/************************************************************************/
+
+static CRITICAL_SECTION* pj_cs_gridcatalog = NULL;
+
+void pj_acquire_lock_gridcatalog()
+{
+    pj_spin_lock();
+    if( pj_cs_gridcatalog == NULL )
+    {
+        pj_cs_gridcatalog = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
+        InitializeCriticalSectionAndSpinCount(pj_cs_gridcatalog, 4000);
+    }
+    pj_spin_unlock();
+
+    EnterCriticalSection(pj_cs_gridcatalog);
+}
+
+/************************************************************************/
+/*                    pj_release_lock_gridcatalog()                     */
+/*                                                                      */
+/*      Internal function.                                              */
+/*      Release the lock used in pj_gridcatalog.c                        */
+/************************************************************************/
+
+void pj_release_lock_gridcatalog()
+{
+    LeaveCriticalSection(pj_cs_gridcatalog);
+}
+
+/************************************************************************/
+/*                   pj_cleanup_lock_gridcatalog()                      */
+/************************************************************************/
+
+static void pj_cleanup_lock_gridcatalog()
+{
+    if( pj_cs_gridcatalog != NULL )
+    {
+        DeleteCriticalSection( pj_cs_gridcatalog );
+        free( pj_cs_gridcatalog );
+        pj_cs_gridcatalog = NULL;
     }
 }
 

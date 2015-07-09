@@ -169,7 +169,7 @@ PJ_GRIDINFO **pj_gridlist_from_nadgrids( projCtx ctx, const char *nadgrids,
     pj_errno = 0;
     *grid_count = 0;
 
-    pj_acquire_lock();
+    pj_acquire_lock_gridlist();
 
 /* -------------------------------------------------------------------- */
 /*      Loop processing names out of nadgrids one at a time.            */
@@ -193,8 +193,8 @@ PJ_GRIDINFO **pj_gridlist_from_nadgrids( projCtx ctx, const char *nadgrids,
         if( end_char >= sizeof(name) )
         {
             pj_ctx_set_errno( ctx, -38 );
-            pj_release_lock();
-            return NULL;
+            gridlist = NULL;
+            break;
         }
         
         strncpy( name, s, end_char );
@@ -209,14 +209,14 @@ PJ_GRIDINFO **pj_gridlist_from_nadgrids( projCtx ctx, const char *nadgrids,
             && required )
         {
             pj_ctx_set_errno( ctx, -38 );
-            pj_release_lock();
-            return NULL;
+            gridlist = NULL;
+            break;
         }
         else
             pj_errno = 0;
     }
 
-    pj_release_lock();
+    pj_release_lock_gridlist();
 
     return gridlist;
 }

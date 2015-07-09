@@ -69,27 +69,27 @@ PJ_GridCatalog *pj_gc_findcatalog( projCtx ctx, const char *name )
 {
     PJ_GridCatalog *catalog;
 
-    pj_acquire_lock();
+    pj_acquire_lock_gridcatalog();
 
     for( catalog=grid_catalog_list; catalog != NULL; catalog = catalog->next ) 
     {
         if( strcmp(catalog->catalog_name, name) == 0 )
         {
-            pj_release_lock();
+            pj_release_lock_gridcatalog();
             return catalog;
         }
     }
 
-    pj_release_lock();
+    pj_release_lock_gridcatalog();
 
     catalog = pj_gc_readcatalog( ctx, name );
     if( catalog == NULL )
         return NULL;
 
-    pj_acquire_lock();
+    pj_acquire_lock_gridcatalog();
     catalog->next = grid_catalog_list;
     grid_catalog_list = catalog;
-    pj_release_lock();
+    pj_release_lock_gridcatalog();
 
     return catalog;
 }
