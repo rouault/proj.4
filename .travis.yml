@@ -18,6 +18,7 @@ install:
   - CC=i586-mingw32msvc-gcc LD=i586-mingw32msvc-ld ../configure --host=i586-mingw32msvc --prefix=/tmp/proj_autoconf_install
   - make -j3
   - make install
+  - make dist-all
   - find /tmp/proj_autoconf_install
 #  - make check
   - cd ..
