@@ -12,6 +12,8 @@ before_install:
 - sudo apt-get install -qq mingw32
 
 install:
+# prepare build files
+  - ./autogen.sh
 # autoconf build
   - mkdir build_autoconf
   - cd build_autoconf
