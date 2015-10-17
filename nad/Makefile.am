@@ -3,6 +3,11 @@ NADPATH = $(top_srcdir)/nad
 EXEPATH = ../src
 PROJEXE = $(EXEPATH)/proj
 CS2CSEXE = $(EXEPATH)/cs2cs
+ifdef WINE
+	NAD2BINEXE = $(WINE) $(EXEPATH)/.libs/nad2bin$(EXEEXT)
+else
+	NAD2BINEXE = $(EXEPATH)/nad2bin$(EXEEXT)
+endif
 
 # PROJ.4 test scripts
 TEST27 = $(NADPATH)/test27
@@ -28,8 +33,8 @@ process-nad2bin:
 	@if [ -f $(NADPATH)/null.lla -a ! -f null ] || [ -f $(NADPATH)/conus.lla -a ! -f conus ] ; then \
 	  for x in $(NADPATH)/*.lla ; do \
 	    DEST=`basename $$x .lla`; \
-	    echo "../src/nad2bin$(EXEEXT) $$DEST < $$x"; \
-	    ../src/nad2bin$(EXEEXT) $$DEST < $$x ; \
+	    echo "$(NAD2BINEXE) $$DEST < $$x"; \
+	    $(NAD2BINEXE) $$DEST < $$x ; \
 	  done; \
 	fi
 
@@ -38,8 +43,8 @@ install-data-local: process-nad2bin
 	@if [ -f $(NADPATH)/null.lla -a ! -f $(NADPATH)/null ] || [ -f $(NADPATH)/conus.lla -a ! -f $(NADPATH)/conus ] ; then \
 	  for x in $(NADPATH)/*.lla ; do \
 	    DEST=$(DESTDIR)$(pkgdatadir)/`basename $$x .lla`; \
-	    echo "../src/nad2bin$(EXEEXT) $$DEST < $$x"; \
-	    ../src/nad2bin$(EXEEXT) $$DEST < $$x ; \
+	    echo "$(NAD2BINEXE) $$DEST < $$x"; \
+	    $(NAD2BINEXE) $$DEST < $$x ; \
 	    if [ $$? -ne 0 ] ; then \
 		echo "nad2bin$(EXEEXT) failed to install $$DEST"; \
 		exit 1; \
