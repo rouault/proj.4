@@ -3,13 +3,16 @@
 
 language: c
 
+sudo: false
+
 compiler:
   - clang
 
-before_install:
-- sudo apt-get update -qq
-- sudo apt-get install -qq wine
-- sudo apt-get install -qq mingw32
+addons:
+  apt:
+    packages:
+    - wine
+    - mingw32
 
 install:
 # prepare build files
