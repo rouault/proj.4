@@ -4,9 +4,9 @@ EXEPATH = ../src
 PROJEXE = $(EXEPATH)/proj
 CS2CSEXE = $(EXEPATH)/cs2cs
 ifdef WINE
-	NAD2BINEXE = $(WINE) $(EXEPATH)/.libs/nad2bin$(EXEEXT)
+  NAD2BINEXE = $(WINE) $(EXEPATH)/.libs/nad2bin$(EXEEXT)
 else
-	NAD2BINEXE = $(EXEPATH)/nad2bin$(EXEEXT)
+  NAD2BINEXE = $(EXEPATH)/nad2bin$(EXEEXT)
 endif
 
 # PROJ.4 test scripts
