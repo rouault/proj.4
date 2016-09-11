@@ -40,6 +40,8 @@ Documentation
    threads
    parameters
    projections/index
+   glossary
+   references
 
 
 
