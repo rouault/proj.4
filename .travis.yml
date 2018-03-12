@@ -8,6 +8,16 @@ cache:
 matrix:
   fast_finish: true
   include:
+
+    - os: linux
+      compiler: gcc
+      language: c
+      sudo: required
+      dist: trusty
+      env:
+        - BUILD_NAME=csa
+        - DETAILS="CLang Static Analyzer"
+
     - os: linux
       compiler: gcc
       language: c
