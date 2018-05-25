@@ -2,8 +2,12 @@
 
 set -e
 
-# coveralls falsely reports .c-files in the build directories as having 100% coverage so we exclude them
-coveralls --extension .c --exclude build_autoconf --exclude build_cmake
+
+if [ "$BUILD_NAME" != "linux_clang" ]; then
+    # coveralls falsely reports .c-files in the build directories as having 100% coverage so we exclude them
+    coveralls --extension .c --exclude build_autoconf --exclude build_cmake
+fi
+
 echo "$TRAVIS_SECURE_ENV_VARS"
 ./travis/build_docs.sh
 if test "$TRAVIS_SECURE_ENV_VARS" = "true" -a "$TRAVIS_BRANCH" = "master"; then
