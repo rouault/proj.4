@@ -18,6 +18,8 @@
 #include "gunit.h"
 #include "src/projects.h"
 
+#define isnan std::isnan
+
 namespace {
 
 TEST(PjPhi2Test, Basic) {
