@@ -1,6 +1,6 @@
 EXTRA_DIST = CMakeLists.txt
 
-include_HEADERS = catch.hpp
+include_HEADERS = catch.hpp gunit.h
 
 lib_LTLIBRARIES = libtestmain.la
 
