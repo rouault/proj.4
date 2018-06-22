@@ -631,6 +631,7 @@ extern struct PJ_ELLPS pj_ellps[];
 
 #ifndef PJ_UNITS__
 extern struct PJ_UNITS pj_units[];
+extern struct PJ_UNITS pj_angular_units[];
 #endif
 
 #ifndef PJ_DATUMS__
