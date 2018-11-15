@@ -2706,6 +2706,36 @@ TEST(operation, wkt1_import_mercator_variant_A) {
 
 // ---------------------------------------------------------------------------
 
+TEST(operation, wkt1_import_mercator_variant_A_that_is_variant_B) {
+    // Adresses https://trac.osgeo.org/gdal/ticket/3026
+    auto wkt = "PROJCS[\"test\",\n"
+               "    GEOGCS[\"WGS 84\",\n"
+               "        DATUM[\"WGS 1984\",\n"
+               "            SPHEROID[\"WGS 84\",6378137,298.257223563]],\n"
+               "        PRIMEM[\"Greenwich\",0],\n"
+               "        UNIT[\"degree\",0.0174532925199433]],\n"
+               "    PROJECTION[\"Mercator_1SP\"],\n"
+               "    PARAMETER[\"latitude_of_origin\",-1],\n"
+               "    PARAMETER[\"central_meridian\",2],\n"
+               "    PARAMETER[\"scale_factor\",1],\n"
+               "    PARAMETER[\"false_easting\",3],\n"
+               "    PARAMETER[\"false_northing\",4],\n"
+               "    UNIT[\"metre\",1]]";
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    auto conversion = crs->derivingConversion();
+    auto convRef = Conversion::createMercatorVariantB(
+        PropertyMap().set(IdentifiedObject::NAME_KEY, "unnamed"), Angle(-1),
+        Angle(2), Length(3), Length(4));
+
+    EXPECT_TRUE(conversion->isEquivalentTo(convRef.get(),
+                                           IComparable::Criterion::EQUIVALENT));
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(operation, mercator_variant_B_export) {
     auto conv = Conversion::createMercatorVariantB(
         PropertyMap(), Angle(1), Angle(2), Length(3), Length(4));

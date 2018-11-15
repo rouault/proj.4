@@ -1192,6 +1192,9 @@ struct WKTParser::Private {
     static bool hasWebMercPROJ4String(const WKTNodeNNPtr &projCRSNode,
                                       const WKTNodeNNPtr &projectionNode);
 
+    static bool projectionHasParameter(const WKTNodeNNPtr &projCRSNode,
+                                       const char *paramName);
+
     ConversionNNPtr buildProjection(const WKTNodeNNPtr &projCRSNode,
                                     const WKTNodeNNPtr &projectionNode,
                                     const UnitOfMeasure &defaultLinearUnit,
@@ -2987,13 +2990,31 @@ WKTParser::Private::buildProjection(const WKTNodeNNPtr &projCRSNode,
     return buildProjectionStandard(projCRSNode, projectionNode,
                                    defaultLinearUnit, defaultAngularUnit);
 }
+
+// ---------------------------------------------------------------------------
+
+bool WKTParser::Private::projectionHasParameter(const WKTNodeNNPtr &projCRSNode,
+                                                const char *paramName) {
+    for (const auto &childNode : projCRSNode->GP()->children()) {
+        if (ci_equal(childNode->GP()->value(), WKTConstants::PARAMETER)) {
+            const auto &childNodeChildren = childNode->GP()->children();
+            if (childNodeChildren.size() == 2 &&
+                metadata::Identifier::isEquivalentName(
+                    stripQuotes(childNodeChildren[0]).c_str(), paramName)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // ---------------------------------------------------------------------------
 
 ConversionNNPtr WKTParser::Private::buildProjectionStandard(
     const WKTNodeNNPtr &projCRSNode, const WKTNodeNNPtr &projectionNode,
     const UnitOfMeasure &defaultLinearUnit,
     const UnitOfMeasure &defaultAngularUnit) {
-    const std::string wkt1ProjectionName =
+    std::string wkt1ProjectionName =
         stripQuotes(projectionNode->GP()->children()[0]);
 
     std::vector<OperationParameterNNPtr> parameters;
@@ -3003,23 +3024,32 @@ ConversionNNPtr WKTParser::Private::buildProjectionStandard(
     auto &extensionNode = projCRSNode->lookForChild(WKTConstants::EXTENSION);
     const auto &extensionChildren = extensionNode->GP()->children();
 
+    bool gdal_3026_hack = false;
     if (metadata::Identifier::isEquivalentName(wkt1ProjectionName.c_str(),
                                                "Mercator_1SP") &&
-        projCRSNode->countChildrenOfName("center_latitude") == 0) {
+        !projectionHasParameter(projCRSNode, "center_latitude")) {
 
-        // The latitude of origin, which should always be zero, is
-        // missing
-        // in GDAL WKT1, but provisionned in the EPSG Mercator_1SP
-        // definition,
-        // so add it manually.
-        PropertyMap propertiesParameter;
-        propertiesParameter.set(IdentifiedObject::NAME_KEY,
-                                "Latitude of natural origin");
-        propertiesParameter.set(Identifier::CODE_KEY, 8801);
-        propertiesParameter.set(Identifier::CODESPACE_KEY, Identifier::EPSG);
-        parameters.push_back(OperationParameter::create(propertiesParameter));
-        values.push_back(
-            ParameterValue::create(Measure(0, UnitOfMeasure::DEGREE)));
+        // Hack for https://trac.osgeo.org/gdal/ticket/3026
+        if (projectionHasParameter(projCRSNode, "latitude_of_origin")) {
+            wkt1ProjectionName = "Mercator_2SP";
+            gdal_3026_hack = true;
+        } else {
+            // The latitude of origin, which should always be zero, is
+            // missing
+            // in GDAL WKT1, but provisionned in the EPSG Mercator_1SP
+            // definition,
+            // so add it manually.
+            PropertyMap propertiesParameter;
+            propertiesParameter.set(IdentifiedObject::NAME_KEY,
+                                    "Latitude of natural origin");
+            propertiesParameter.set(Identifier::CODE_KEY, 8801);
+            propertiesParameter.set(Identifier::CODESPACE_KEY,
+                                    Identifier::EPSG);
+            parameters.push_back(
+                OperationParameter::create(propertiesParameter));
+            values.push_back(
+                ParameterValue::create(Measure(0, UnitOfMeasure::DEGREE)));
+        }
 
     } else if (metadata::Identifier::isEquivalentName(
                    wkt1ProjectionName.c_str(), "Polar_Stereographic")) {
@@ -3124,10 +3154,20 @@ ConversionNNPtr WKTParser::Private::buildProjectionStandard(
             if (childNodeChildren.size() < 2) {
                 ThrowNotEnoughChildren(WKTConstants::PARAMETER);
             }
+            const auto &paramValue = childNodeChildren[1]->GP()->value();
+
             PropertyMap propertiesParameter;
             const std::string wkt1ParameterName(
                 stripQuotes(childNodeChildren[0]));
             std::string parameterName(wkt1ParameterName);
+            if (gdal_3026_hack) {
+                if (parameterName == "latitude_of_origin") {
+                    parameterName = "standard_parallel_1";
+                } else if (parameterName == "scale_factor" &&
+                           paramValue == "1") {
+                    continue;
+                }
+            }
             const auto *paramMapping =
                 mapping ? getMappingFromWKT1(mapping, parameterName) : nullptr;
             if (paramMapping) {
@@ -3142,7 +3182,6 @@ ConversionNNPtr WKTParser::Private::buildProjectionStandard(
             propertiesParameter.set(IdentifiedObject::NAME_KEY, parameterName);
             parameters.push_back(
                 OperationParameter::create(propertiesParameter));
-            const auto &paramValue = childNodeChildren[1]->GP()->value();
             try {
                 double val = io::asDouble(paramValue);
                 auto unit = guessUnitForParameter(
