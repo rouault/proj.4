@@ -687,7 +687,7 @@ TEST(crs, EPSG_27561_projected_with_geodetic_in_grad_as_PROJ_string_and_WKT1) {
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
         "+proj=lcc +lat_1=49.5 +lat_0=49.5 +lon_0=0 +k_0=0.999877341 "
-        "+x_0=600000 +y_0=200000 +ellps=clrk80ign +pm=paris +no_defs");
+        "+x_0=600000 +y_0=200000 +ellps=clrk80ign +pm=paris +units=m +no_defs");
 
     auto nn_crs = NN_CHECK_ASSERT(crs);
     EXPECT_TRUE(nn_crs->isEquivalentTo(nn_crs.get()));
@@ -1654,7 +1654,7 @@ TEST(crs, projectedCRS_as_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=utm +zone=31 +datum=WGS84 +no_defs");
+        "+proj=utm +zone=31 +datum=WGS84 +units=m +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -2913,7 +2913,7 @@ TEST(crs, compoundCRS_as_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=utm +zone=31 +datum=WGS84 +vunits=m +no_defs");
+        "+proj=utm +zone=31 +datum=WGS84 +units=m +vunits=m +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -3362,7 +3362,8 @@ TEST(crs, boundCRS_projectedCRS_to_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=utm +zone=31 +ellps=WGS84 +towgs84=1,2,3,4,5,6,7 +no_defs");
+        "+proj=utm +zone=31 +ellps=WGS84 +towgs84=1,2,3,4,5,6,7 +units=m "
+        "+no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -4523,7 +4524,7 @@ TEST(crs, crs_createBoundCRSToWGS84IfPossible) {
                   "+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 "
                   "+y_0=500000 +ellps=krass "
                   "+towgs84=2.329,-147.042,-92.08,-0.309,0.325,0.497,5.69 "
-                  "+no_defs");
+                  "+units=m +no_defs");
     }
     {
         // Pulkovo 42 Poland
@@ -4540,7 +4541,7 @@ TEST(crs, crs_createBoundCRSToWGS84IfPossible) {
                   "+proj=sterea +lat_0=50.625 +lon_0=21.0833333333333 "
                   "+k=0.9998 +x_0=4637000 +y_0=5647000 +ellps=krass "
                   "+towgs84=33.4,-146.6,-76.3,-0.359,-0.053,0.844,-0.84 "
-                  "+no_defs");
+                  "+units=m +no_defs");
     }
     {
         // NTF (Paris)
@@ -4571,7 +4572,8 @@ TEST(crs, crs_createBoundCRSToWGS84IfPossible) {
                           .get()),
                   "+proj=lcc +lat_1=46.8 +lat_0=46.8 +lon_0=0 +k_0=0.99987742 "
                   "+x_0=600000 +y_0=2200000 +ellps=clrk80ign +pm=paris "
-                  "+towgs84=-168,-60,320,0,0,0,0 +vunits=m +no_defs");
+                  "+towgs84=-168,-60,320,0,0,0,0 +units=m "
+                  "+vunits=m +no_defs");
     }
     {
         auto crs = createVerticalCRS();
@@ -4591,7 +4593,7 @@ TEST(crs, crs_createBoundCRSToWGS84IfPossible) {
                           .get()),
                   "+proj=stere +lat_0=-90 +lat_ts=-67 +lon_0=140 +x_0=300000 "
                   "+y_0=-2299363.482 +ellps=intl "
-                  "+towgs84=324.912,153.282,172.026,0,0,0,0 +no_defs");
+                  "+towgs84=324.912,153.282,172.026,0,0,0,0 +units=m +no_defs");
     }
     {
         auto factoryIGNF =

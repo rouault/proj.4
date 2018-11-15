@@ -6239,7 +6239,8 @@ TEST(io, projparse_utm_south) {
 // ---------------------------------------------------------------------------
 
 TEST(io, projparse_non_earth_ellipsoid) {
-    std::string input("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +R=1 +no_defs");
+    std::string input("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +R=1 +units=m "
+                      "+no_defs");
     auto obj = PROJStringParser().createFromPROJString(input);
     auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
     ASSERT_TRUE(crs != nullptr);
@@ -6456,7 +6457,7 @@ TEST(io, projparse_projected_unknown) {
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
         "+proj=mbt_s +unused_flag +lat_0=45 +lon_0=0 +k=1 +x_0=10 "
-        "+y_0=0 +datum=WGS84 +no_defs");
+        "+y_0=0 +datum=WGS84 +units=m +no_defs");
 
     EXPECT_EQ(
         crs->exportToPROJString(
@@ -6896,7 +6897,7 @@ TEST(io, projparse_projected_title) {
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
         "+proj=utm +zone=43 +south +ellps=intl "
-        "+towgs84=109.753,-528.133,-362.244,0,0,0,0 +no_defs");
+        "+towgs84=109.753,-528.133,-362.244,0,0,0,0 +units=m +no_defs");
 }
 
 // ---------------------------------------------------------------------------

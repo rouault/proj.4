@@ -2426,6 +2426,12 @@ void ProjectedCRS::addUnitConvertAndAxisSwap(io::PROJStringFormatter *formatter,
                 formatter->addParam("units", projUnit);
             }
         }
+    } else if (formatter->convention() ==
+               io::PROJStringFormatter::Convention::PROJ_4) {
+        // could come from the hardcoded def of webmerc
+        if (!formatter->hasParam("units")) {
+            formatter->addParam("units", "m");
+        }
     }
 
     if (formatter->convention() ==
