@@ -373,6 +373,8 @@ class PROJ_GCC_DLL PROJStringFormatter {
     PROJ_DLL void addParam(const char *paramName,
                            const std::vector<double> &vals);
 
+    PROJ_INTERNAL bool hasParam(const char *paramName) const;
+
     PROJ_INTERNAL std::set<std::string> getUsedGridNames() const;
 
     PROJ_INTERNAL void setTOWGS84Parameters(const std::vector<double> &params);

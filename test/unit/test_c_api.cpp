@@ -307,7 +307,7 @@ TEST_F(CApi, proj_obj_as_proj_string) {
     {
         auto proj_4 = proj_obj_as_proj_string(obj, PJ_PROJ_4, nullptr);
         ASSERT_NE(proj_4, nullptr);
-        EXPECT_EQ(std::string(proj_4), "+proj=longlat +datum=WGS84");
+        EXPECT_EQ(std::string(proj_4), "+proj=longlat +datum=WGS84 +no_defs");
     }
 }
 
@@ -336,7 +336,7 @@ TEST_F(CApi, proj_obj_as_proj_string_etmerc_option) {
     auto str = proj_obj_as_proj_string(obj, PJ_PROJ_4, options);
     ASSERT_NE(str, nullptr);
     EXPECT_EQ(str, std::string("+proj=etmerc +lat_0=0 +lon_0=0 +k_0=1 +x_0=0 "
-                               "+y_0=0 +datum=WGS84"));
+                               "+y_0=0 +datum=WGS84 +no_defs"));
 }
 
 // ---------------------------------------------------------------------------
@@ -356,7 +356,8 @@ TEST_F(CApi, proj_obj_crs_create_bound_crs_to_WGS84) {
     EXPECT_EQ(std::string(proj_4),
               "+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 "
               "+y_0=500000 +ellps=krass "
-              "+towgs84=2.329,-147.042,-92.08,-0.309,0.325,0.497,5.69");
+              "+towgs84=2.329,-147.042,-92.08,-0.309,0.325,0.497,5.69 "
+              "+no_defs");
 }
 
 // ---------------------------------------------------------------------------

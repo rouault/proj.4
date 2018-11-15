@@ -356,7 +356,7 @@ TEST(crs, EPSG_4326_as_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=longlat +datum=WGS84");
+        "+proj=longlat +datum=WGS84 +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -554,7 +554,7 @@ TEST(crs, EPSG_4807_as_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=longlat +ellps=clrk80ign +pm=paris");
+        "+proj=longlat +ellps=clrk80ign +pm=paris +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -580,7 +580,7 @@ TEST(crs, EPSG_4267) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=longlat +datum=NAD27");
+        "+proj=longlat +datum=NAD27 +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -619,7 +619,7 @@ TEST(crs, EPSG_4269) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=longlat +datum=NAD83");
+        "+proj=longlat +datum=NAD83 +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -687,7 +687,7 @@ TEST(crs, EPSG_27561_projected_with_geodetic_in_grad_as_PROJ_string_and_WKT1) {
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
         "+proj=lcc +lat_1=49.5 +lat_0=49.5 +lon_0=0 +k_0=0.999877341 "
-        "+x_0=600000 +y_0=200000 +ellps=clrk80ign +pm=paris");
+        "+x_0=600000 +y_0=200000 +ellps=clrk80ign +pm=paris +no_defs");
 
     auto nn_crs = NN_CHECK_ASSERT(crs);
     EXPECT_TRUE(nn_crs->isEquivalentTo(nn_crs.get()));
@@ -807,7 +807,7 @@ TEST(crs, EPSG_2222_projected_unit_foot_as_PROJ_string_and_WKT1) {
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
         "+proj=tmerc +lat_0=31 +lon_0=-110.166666666667 +k_0=0.9999 "
-        "+x_0=213360 +y_0=0 +datum=NAD83 +units=ft");
+        "+x_0=213360 +y_0=0 +datum=NAD83 +units=ft +no_defs");
 
     auto wkt1 = crs->exportToWKT(
         WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL).get());
@@ -1097,7 +1097,7 @@ TEST(crs, geocentricCRS_as_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=geocent +ellps=WGS84");
+        "+proj=geocent +ellps=WGS84 +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -1654,7 +1654,7 @@ TEST(crs, projectedCRS_as_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=utm +zone=31 +datum=WGS84");
+        "+proj=utm +zone=31 +datum=WGS84 +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -2913,7 +2913,7 @@ TEST(crs, compoundCRS_as_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=utm +zone=31 +datum=WGS84 +vunits=m");
+        "+proj=utm +zone=31 +datum=WGS84 +vunits=m +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -3339,7 +3339,7 @@ TEST(crs, boundCRS_geographicCRS_to_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=longlat +ellps=WGS84 +towgs84=1,2,3,4,5,6,7");
+        "+proj=longlat +ellps=WGS84 +towgs84=1,2,3,4,5,6,7 +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -3362,7 +3362,7 @@ TEST(crs, boundCRS_projectedCRS_to_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=utm +zone=31 +ellps=WGS84 +towgs84=1,2,3,4,5,6,7");
+        "+proj=utm +zone=31 +ellps=WGS84 +towgs84=1,2,3,4,5,6,7 +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -3461,7 +3461,7 @@ TEST(crs, WKT1_DATUM_EXTENSION_to_WKT1_and_PROJ_string) {
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
         "+proj=nzmg +lat_0=-41 +lon_0=173 +x_0=2510000 +y_0=6023150 "
-        "+ellps=intl +nadgrids=nzgd2kgrid0005.gsb +units=m");
+        "+ellps=intl +nadgrids=nzgd2kgrid0005.gsb +units=m +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -3561,7 +3561,7 @@ TEST(crs, WKT1_VERT_DATUM_EXTENSION_to_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+geoidgrids=egm08_25.gtx +vunits=m");
+        "+geoidgrids=egm08_25.gtx +vunits=m +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -4522,7 +4522,8 @@ TEST(crs, crs_createBoundCRSToWGS84IfPossible) {
                           .get()),
                   "+proj=sterea +lat_0=46 +lon_0=25 +k=0.99975 +x_0=500000 "
                   "+y_0=500000 +ellps=krass "
-                  "+towgs84=2.329,-147.042,-92.08,-0.309,0.325,0.497,5.69");
+                  "+towgs84=2.329,-147.042,-92.08,-0.309,0.325,0.497,5.69 "
+                  "+no_defs");
     }
     {
         // Pulkovo 42 Poland
@@ -4538,7 +4539,8 @@ TEST(crs, crs_createBoundCRSToWGS84IfPossible) {
                           .get()),
                   "+proj=sterea +lat_0=50.625 +lon_0=21.0833333333333 "
                   "+k=0.9998 +x_0=4637000 +y_0=5647000 +ellps=krass "
-                  "+towgs84=33.4,-146.6,-76.3,-0.359,-0.053,0.844,-0.84");
+                  "+towgs84=33.4,-146.6,-76.3,-0.359,-0.053,0.844,-0.84 "
+                  "+no_defs");
     }
     {
         // NTF (Paris)
@@ -4553,7 +4555,7 @@ TEST(crs, crs_createBoundCRSToWGS84IfPossible) {
                           PROJStringFormatter::Convention::PROJ_4)
                           .get()),
                   "+proj=longlat +ellps=clrk80ign +pm=paris "
-                  "+towgs84=-168,-60,320,0,0,0,0");
+                  "+towgs84=-168,-60,320,0,0,0,0 +no_defs");
     }
     {
         // NTF (Paris) / Lambert zone II + NGF-IGN69 height
@@ -4569,7 +4571,7 @@ TEST(crs, crs_createBoundCRSToWGS84IfPossible) {
                           .get()),
                   "+proj=lcc +lat_1=46.8 +lat_0=46.8 +lon_0=0 +k_0=0.99987742 "
                   "+x_0=600000 +y_0=2200000 +ellps=clrk80ign +pm=paris "
-                  "+towgs84=-168,-60,320,0,0,0,0 +vunits=m");
+                  "+towgs84=-168,-60,320,0,0,0,0 +vunits=m +no_defs");
     }
     {
         auto crs = createVerticalCRS();
@@ -4589,7 +4591,7 @@ TEST(crs, crs_createBoundCRSToWGS84IfPossible) {
                           .get()),
                   "+proj=stere +lat_0=-90 +lat_ts=-67 +lon_0=140 +x_0=300000 "
                   "+y_0=-2299363.482 +ellps=intl "
-                  "+towgs84=324.912,153.282,172.026,0,0,0,0");
+                  "+towgs84=324.912,153.282,172.026,0,0,0,0 +no_defs");
     }
     {
         auto factoryIGNF =
@@ -4604,7 +4606,7 @@ TEST(crs, crs_createBoundCRSToWGS84IfPossible) {
                           PROJStringFormatter::Convention::PROJ_4)
                           .get()),
                   "+proj=geocent +ellps=intl "
-                  "+towgs84=109.753,-528.133,-362.244,0,0,0,0");
+                  "+towgs84=109.753,-528.133,-362.244,0,0,0,0 +no_defs");
     }
 }
 

@@ -4226,6 +4226,13 @@ IPROJStringExportable::~IPROJStringExportable() = default;
 std::string IPROJStringExportable::exportToPROJString(
     PROJStringFormatter *formatter) const {
     _exportToPROJString(formatter);
+    if (formatter->convention() ==
+            io::PROJStringFormatter::Convention::PROJ_4 &&
+        dynamic_cast<const crs::CRS *>(this)) {
+        if (!formatter->hasParam("no_defs")) {
+            formatter->addParam("no_defs");
+        }
+    }
     return formatter->toString();
 }
 //! @endcond
@@ -4958,6 +4965,19 @@ void PROJStringFormatter::addStep(const std::string &stepName) {
 void PROJStringFormatter::setCurrentStepInverted(bool inverted) {
     assert(!d->steps_.empty());
     d->steps_.back().inverted = inverted;
+}
+
+// ---------------------------------------------------------------------------
+
+bool PROJStringFormatter::hasParam(const char *paramName) const {
+    if (!d->steps_.empty()) {
+        for (const auto &paramValue : d->steps_.back().paramValues) {
+            if (paramValue.keyEquals(paramName)) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 // ---------------------------------------------------------------------------

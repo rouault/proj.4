@@ -5455,7 +5455,7 @@ TEST(io, projparse_longlat_towgs84_3_terms) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=longlat +ellps=GRS80 +towgs84=1.2,2,3,0,0,0,0");
+        "+proj=longlat +ellps=GRS80 +towgs84=1.2,2,3,0,0,0,0 +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -5490,7 +5490,7 @@ TEST(io, projparse_longlat_towgs84_7_terms) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=longlat +ellps=GRS80 +towgs84=1.2,2,3,4,5,6,7");
+        "+proj=longlat +ellps=GRS80 +towgs84=1.2,2,3,4,5,6,7 +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -5514,7 +5514,7 @@ TEST(io, projparse_longlat_nadgrids) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=longlat +ellps=GRS80 +nadgrids=foo.gsb");
+        "+proj=longlat +ellps=GRS80 +nadgrids=foo.gsb +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -5542,7 +5542,7 @@ TEST(io, projparse_longlat_geoidgrids) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=longlat +ellps=GRS80 +geoidgrids=foo.gtx +vunits=m");
+        "+proj=longlat +ellps=GRS80 +geoidgrids=foo.gtx +vunits=m +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -6239,7 +6239,7 @@ TEST(io, projparse_utm_south) {
 // ---------------------------------------------------------------------------
 
 TEST(io, projparse_non_earth_ellipsoid) {
-    std::string input("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +R=1");
+    std::string input("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +R=1 +no_defs");
     auto obj = PROJStringParser().createFromPROJString(input);
     auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
     ASSERT_TRUE(crs != nullptr);
@@ -6456,7 +6456,7 @@ TEST(io, projparse_projected_unknown) {
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
         "+proj=mbt_s +unused_flag +lat_0=45 +lon_0=0 +k=1 +x_0=10 "
-        "+y_0=0 +datum=WGS84");
+        "+y_0=0 +datum=WGS84 +no_defs");
 
     EXPECT_EQ(
         crs->exportToPROJString(
@@ -6872,7 +6872,8 @@ TEST(io, projparse_longlat_title) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=longlat +ellps=intl +towgs84=109.753,-528.133,-362.244,0,0,0,0");
+        "+proj=longlat +ellps=intl +towgs84=109.753,-528.133,-362.244,0,0,0,0 "
+        "+no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -6895,7 +6896,7 @@ TEST(io, projparse_projected_title) {
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
         "+proj=utm +zone=43 +south +ellps=intl "
-        "+towgs84=109.753,-528.133,-362.244,0,0,0,0");
+        "+towgs84=109.753,-528.133,-362.244,0,0,0,0 +no_defs");
 }
 
 // ---------------------------------------------------------------------------
