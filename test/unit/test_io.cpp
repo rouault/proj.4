@@ -1183,6 +1183,39 @@ TEST(wkt_parse, wkt1_polar_stereographic_scale_factor) {
 
 // ---------------------------------------------------------------------------
 
+TEST(wkt_parse, wkt1_Spherical_Cross_Track_Height) {
+    auto wkt = "PROJCS[\"unknown\",\n"
+               "    GEOGCS[\"unknown\",\n"
+               "        DATUM[\"WGS_1984\",\n"
+               "            SPHEROID[\"WGS 84\",6378137,298.257223563,\n"
+               "                AUTHORITY[\"EPSG\",\"7030\"]],\n"
+               "            AUTHORITY[\"EPSG\",\"6326\"]],\n"
+               "        PRIMEM[\"Greenwich\",0,\n"
+               "            AUTHORITY[\"EPSG\",\"8901\"]],\n"
+               "        UNIT[\"degree\",0.0174532925199433,\n"
+               "            AUTHORITY[\"EPSG\",\"9122\"]]],\n"
+               "    PROJECTION[\"Spherical_Cross_Track_Height\"],\n"
+               "    PARAMETER[\"peg_point_latitude\",1],\n"
+               "    PARAMETER[\"peg_point_longitude\",2],\n"
+               "    PARAMETER[\"peg_point_heading\",3],\n"
+               "    PARAMETER[\"peg_point_height\",4],\n"
+               "    UNIT[\"metre\",1,\n"
+               "        AUTHORITY[\"EPSG\",\"9001\"]]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    auto projString = crs->exportToPROJString(
+        PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+            .get());
+    auto expectedPROJString = "+proj=sch +plat_0=1 +plon_0=2 +phdg_0=3 +h_0=4 "
+                              "+datum=WGS84 +units=m +no_defs";
+    EXPECT_EQ(projString, expectedPROJString);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(wkt_parse, wkt2_projected) {
     auto wkt = "PROJCRS[\"WGS 84 / UTM zone 31N\",\n"
                "    BASEGEODCRS[\"WGS 84\",\n"
