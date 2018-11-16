@@ -2782,6 +2782,70 @@ TEST(operation, mercator_variant_B_export) {
 
 // ---------------------------------------------------------------------------
 
+TEST(operation, odd_mercator_1sp_with_non_null_latitude) {
+    auto obj = WKTParser().createFromWKT(
+        "PROJCS[\"unnamed\",\n"
+        "    GEOGCS[\"WGS 84\",\n"
+        "        DATUM[\"WGS_1984\",\n"
+        "            SPHEROID[\"WGS 84\",6378137,298.257223563,\n"
+        "                AUTHORITY[\"EPSG\",\"7030\"]],\n"
+        "            AUTHORITY[\"EPSG\",\"6326\"]],\n"
+        "        PRIMEM[\"Greenwich\",0,\n"
+        "            AUTHORITY[\"EPSG\",\"8901\"]],\n"
+        "        UNIT[\"degree\",0.0174532925199433,\n"
+        "            AUTHORITY[\"EPSG\",\"9122\"]],\n"
+        "        AUTHORITY[\"EPSG\",\"4326\"]],\n"
+        "    PROJECTION[\"Mercator_1SP\"],\n"
+        "    PARAMETER[\"latitude_of_origin\",30],\n"
+        "    PARAMETER[\"central_meridian\",0],\n"
+        "    PARAMETER[\"scale_factor\",0.99],\n"
+        "    PARAMETER[\"false_easting\",0],\n"
+        "    PARAMETER[\"false_northing\",0],\n"
+        "    UNIT[\"metre\",1],\n"
+        "    AXIS[\"Easting\",EAST],\n"
+        "    AXIS[\"Northing\",NORTH]]");
+
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    EXPECT_THROW(crs->exportToPROJString(PROJStringFormatter::create().get()),
+                 FormattingException);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(operation, odd_mercator_2sp_with_latitude_of_origin) {
+    auto obj = WKTParser().createFromWKT(
+        "PROJCS[\"unnamed\",\n"
+        "    GEOGCS[\"WGS 84\",\n"
+        "        DATUM[\"WGS_1984\",\n"
+        "            SPHEROID[\"WGS 84\",6378137,298.257223563,\n"
+        "                AUTHORITY[\"EPSG\",\"7030\"]],\n"
+        "            AUTHORITY[\"EPSG\",\"6326\"]],\n"
+        "        PRIMEM[\"Greenwich\",0,\n"
+        "            AUTHORITY[\"EPSG\",\"8901\"]],\n"
+        "        UNIT[\"degree\",0.0174532925199433,\n"
+        "            AUTHORITY[\"EPSG\",\"9122\"]],\n"
+        "        AUTHORITY[\"EPSG\",\"4326\"]],\n"
+        "    PROJECTION[\"Mercator_2SP\"],\n"
+        "    PARAMETER[\"standard_parallel_1\",30],\n"
+        "    PARAMETER[\"latitude_of_origin\",40],\n"
+        "    PARAMETER[\"central_meridian\",0],\n"
+        "    PARAMETER[\"false_easting\",0],\n"
+        "    PARAMETER[\"false_northing\",0],\n"
+        "    UNIT[\"metre\",1],\n"
+        "    AXIS[\"Easting\",EAST],\n"
+        "    AXIS[\"Northing\",NORTH]]");
+
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    EXPECT_THROW(crs->exportToPROJString(PROJStringFormatter::create().get()),
+                 FormattingException);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(operation, webmerc_export) {
     auto conv = Conversion::createPopularVisualisationPseudoMercator(
         PropertyMap(), Angle(0), Angle(2), Length(3), Length(4));

@@ -3187,16 +3187,25 @@ ConversionNNPtr WKTParser::Private::buildProjectionStandard(
                 stripQuotes(childNodeChildren[0]));
             std::string parameterName(wkt1ParameterName);
             if (gdal_3026_hack) {
-                if (parameterName == "latitude_of_origin") {
+                if (ci_equal(parameterName, "latitude_of_origin")) {
                     parameterName = "standard_parallel_1";
-                } else if (parameterName == "scale_factor" &&
+                } else if (ci_equal(parameterName, "scale_factor") &&
                            paramValue == "1") {
                     continue;
                 }
             }
             const auto *paramMapping =
                 mapping ? getMappingFromWKT1(mapping, parameterName) : nullptr;
-            if (paramMapping) {
+            if (mapping &&
+                mapping->epsg_code == EPSG_CODE_METHOD_MERCATOR_VARIANT_B &&
+                ci_equal(parameterName, "latitude_of_origin")) {
+                parameterName = EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN;
+                propertiesParameter.set(
+                    Identifier::CODE_KEY,
+                    EPSG_CODE_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN);
+                propertiesParameter.set(Identifier::CODESPACE_KEY,
+                                        Identifier::EPSG);
+            } else if (paramMapping) {
                 parameterName = paramMapping->wkt2_name;
                 if (paramMapping->epsg_code != 0) {
                     propertiesParameter.set(Identifier::CODE_KEY,

@@ -5116,6 +5116,21 @@ void Conversion::_exportToPROJString(
                 std::string("Unsupported value for ") +
                 EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN);
         }
+    } else if (methodEPSGCode == EPSG_CODE_METHOD_MERCATOR_VARIANT_B) {
+        const auto &scaleFactor = parameterValueMeasure(WKT1_SCALE_FACTOR, 0);
+        if (scaleFactor.unit().type() != common::UnitOfMeasure::Type::UNKNOWN &&
+            std::fabs(scaleFactor.getSIValue() - 1.0) > 1e-10) {
+            throw io::FormattingException(
+                "Unexpected presence of scale factor in Mercator (variant B)");
+        }
+        double latitudeOrigin = parameterValueNumeric(
+            EPSG_CODE_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN,
+            common::UnitOfMeasure::DEGREE);
+        if (latitudeOrigin != 0) {
+            throw io::FormattingException(
+                std::string("Unsupported value for ") +
+                EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN);
+        }
         // PROJ.4 specific hack for webmercator
     } else if (formatter->convention() ==
                    io::PROJStringFormatter::Convention::PROJ_4 &&
