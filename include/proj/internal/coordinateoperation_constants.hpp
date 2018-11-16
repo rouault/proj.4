@@ -342,9 +342,8 @@ static const ParamMapping *const paramsHomTwoPoint[] = {
     nullptr};
 
 static const ParamMapping *const paramsIMWP[] = {
-    &paramLongitudeNatOrigin,     &paramLatitude1stStdParallel,
-    &paramLatitude2ndStdParallel, &paramFalseEasting,
-    &paramFalseNorthing,          nullptr};
+    &paramLongitudeNatOrigin, &paramLatFirstPoint, &paramLatSecondPoint,
+    &paramFalseEasting,       &paramFalseNorthing, nullptr};
 
 static const ParamMapping paramLonCentreLonCenter = {
     EPSG_NAME_PARAMETER_LONGITUDE_OF_ORIGIN,
