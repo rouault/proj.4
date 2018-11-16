@@ -263,6 +263,22 @@ TEST_F(CApi, proj_obj_as_wkt) {
         EXPECT_TRUE(std::string(wkt).find("AXIS") == std::string::npos) << wkt;
     }
 
+    // OUTPUT_AXIS=AUTO
+    {
+        const char *const options[] = {"OUTPUT_AXIS=AUTO", nullptr};
+        auto wkt = proj_obj_as_wkt(obj, PJ_WKT1_GDAL, options);
+        ASSERT_NE(wkt, nullptr);
+        EXPECT_TRUE(std::string(wkt).find("AXIS") == std::string::npos) << wkt;
+    }
+
+    // OUTPUT_AXIS=YES
+    {
+        const char *const options[] = {"OUTPUT_AXIS=YES", nullptr};
+        auto wkt = proj_obj_as_wkt(obj, PJ_WKT1_GDAL, options);
+        ASSERT_NE(wkt, nullptr);
+        EXPECT_TRUE(std::string(wkt).find("AXIS") != std::string::npos) << wkt;
+    }
+
     // unsupported option
     {
         const char *const options[] = {"unsupported=yes", nullptr};

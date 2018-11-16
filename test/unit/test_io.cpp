@@ -6649,7 +6649,7 @@ TEST(io, projparse_projected_unknown) {
         "84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY["
         "\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\","
         "\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\","
-        "\"9122\"]],AXIS[\"Longitude\",EAST],AXIS[\"Latitude\",NORTH]],"
+        "\"9122\"]]],"
         "PROJECTION[\"custom_proj4\"],UNIT[\"metre\",1,AUTHORITY[\"EPSG\","
         "\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],EXTENSION["
         "\"PROJ4\",\"+proj=mbt_s +datum=WGS84 +unused_flag +lat_0=45 "

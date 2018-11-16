@@ -839,7 +839,10 @@ static const char *getOptionValue(const char *option,
  * <li>MULTILINE=YES/NO. Defaults to YES, except for WKT1_ESRI</li>
  * <li>INDENTATION_WIDTH=number. Defauls to 4 (when multiline output is
  * on).</li>
- * <li>OUTPUT_AXIS=YES/NO. Defaults to YES, except for WKT1_ESRI.</li>
+ * <li>OUTPUT_AXIS=AUTO/YES/NO. In AUTO mode, axis will be output for WKT2
+ * variants, for WKT1_GDAL for ProjectedCRS with easting/northing ordering
+ * (otherwise stripped), but not for WKT1_ESRI. Setting to YES will output
+ * them unconditionaly, and to NO will omit them unconditionaly.</li>
  * </ul>
  * @return a string, or NULL in case of error.
  */
@@ -890,7 +893,12 @@ const char *proj_obj_as_wkt(PJ_OBJ *obj, PJ_WKT_TYPE type,
             } else if ((value = getOptionValue(*iter, "INDENTATION_WIDTH="))) {
                 formatter->setIndentationWidth(std::atoi(value));
             } else if ((value = getOptionValue(*iter, "OUTPUT_AXIS="))) {
-                formatter->setOutputAxis(ci_equal(value, "YES"));
+                if (!ci_equal(value, "AUTO")) {
+                    formatter->setOutputAxis(
+                        ci_equal(value, "YES")
+                            ? WKTFormatter::OutputAxisRule::YES
+                            : WKTFormatter::OutputAxisRule::NO);
+                }
             } else {
                 std::string msg("Unknown option :");
                 msg += *iter;

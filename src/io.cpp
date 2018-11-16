@@ -128,7 +128,7 @@ struct WKTFormatter::Private {
         bool primeMeridianInDegree_ = false;
         bool use2018Keywords_ = false;
         bool useESRIDialect_ = false;
-        bool outputAxis_ = true;
+        OutputAxisRule outputAxis_ = WKTFormatter::OutputAxisRule::YES;
     };
     Params params_{};
     DatabaseContextPtr dbContext_{};
@@ -225,10 +225,9 @@ WKTFormatter &WKTFormatter::setIndentationWidth(int width) noexcept {
 // ---------------------------------------------------------------------------
 
 /** \brief Set whether AXIS nodes should be output.
- *
- * This can typically be set to false for some variants of WKT1_GDAL.
  */
-WKTFormatter &WKTFormatter::setOutputAxis(bool outputAxisIn) noexcept {
+WKTFormatter &
+WKTFormatter::setOutputAxis(OutputAxisRule outputAxisIn) noexcept {
     d->params_.outputAxis_ = outputAxisIn;
     return *this;
 }
@@ -308,6 +307,8 @@ WKTFormatter::WKTFormatter(Convention convention)
         d->params_.outputAxisOrder_ = false;
         d->params_.forceUNITKeyword_ = true;
         d->params_.primeMeridianInDegree_ = true;
+        d->params_.outputAxis_ =
+            WKTFormatter::OutputAxisRule::WKT1_GDAL_EPSG_STYLE;
         break;
 
     case Convention::WKT1_ESRI:
@@ -317,7 +318,7 @@ WKTFormatter::WKTFormatter(Convention convention)
         d->params_.primeMeridianInDegree_ = true;
         d->params_.useESRIDialect_ = true;
         d->params_.multiLine_ = false;
-        d->params_.outputAxis_ = false;
+        d->params_.outputAxis_ = WKTFormatter::OutputAxisRule::NO;
         break;
 
     default:
@@ -568,7 +569,9 @@ const UnitOfMeasureNNPtr &WKTFormatter::axisAngularUnit() const {
 
 // ---------------------------------------------------------------------------
 
-bool WKTFormatter::outputAxis() const { return d->params_.outputAxis_; }
+WKTFormatter::OutputAxisRule WKTFormatter::outputAxis() const {
+    return d->params_.outputAxis_;
+}
 
 // ---------------------------------------------------------------------------
 

@@ -206,7 +206,19 @@ class PROJ_GCC_DLL WKTFormatter {
 
     PROJ_DLL WKTFormatter &setMultiLine(bool multiLine) noexcept;
     PROJ_DLL WKTFormatter &setIndentationWidth(int width) noexcept;
-    PROJ_DLL WKTFormatter &setOutputAxis(bool outputAxis) noexcept;
+
+    /** Rule for output AXIS nodes */
+    enum class OutputAxisRule {
+        /** Always include AXIS nodes */
+        YES,
+        /** Never include AXIS nodes */
+        NO,
+        /** Includes them only on PROJCS node if it uses Easting/Northing
+         *ordering. Typically used for WKT1_GDAL */
+        WKT1_GDAL_EPSG_STYLE,
+    };
+
+    PROJ_DLL WKTFormatter &setOutputAxis(OutputAxisRule outputAxis) noexcept;
     PROJ_DLL WKTFormatter &setStrict(bool strict) noexcept;
     PROJ_DLL bool isStrict() const noexcept;
 
@@ -273,7 +285,7 @@ class PROJ_GCC_DLL WKTFormatter {
     PROJ_INTERNAL bool isInverted() const;
 #endif
 
-    PROJ_INTERNAL bool outputAxis() const;
+    PROJ_INTERNAL OutputAxisRule outputAxis() const;
     PROJ_INTERNAL bool outputAxisOrder() const;
     PROJ_INTERNAL bool primeMeridianOmittedIfGreenwich() const;
     PROJ_INTERNAL bool ellipsoidUnitOmittedIfMetre() const;

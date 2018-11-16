@@ -1763,7 +1763,15 @@ void VerticalCRS::_exportToWKT(io::WKTFormatter *formatter) const {
     if (!isWKT2) {
         axisList[0]->unit()._exportToWKT(formatter);
     }
+
+    const auto oldAxisOutputRule = formatter->outputAxis();
+    if (oldAxisOutputRule ==
+        io::WKTFormatter::OutputAxisRule::WKT1_GDAL_EPSG_STYLE) {
+        formatter->setOutputAxis(io::WKTFormatter::OutputAxisRule::YES);
+    }
     cs->_exportToWKT(formatter);
+    formatter->setOutputAxis(oldAxisOutputRule);
+
     ObjectUsage::baseExportToWKT(formatter);
     formatter->endNode();
 }
@@ -2231,6 +2239,22 @@ const cs::CartesianCSNNPtr &ProjectedCRS::coordinateSystem() PROJ_CONST_DEFN {
 void ProjectedCRS::_exportToWKT(io::WKTFormatter *formatter) const {
     const bool isWKT2 = formatter->version() == io::WKTFormatter::Version::WKT2;
 
+    const auto &l_coordinateSystem = d->coordinateSystem();
+    const auto &axisList = l_coordinateSystem->axisList();
+
+    const auto exportAxis = [&l_coordinateSystem, &axisList, &formatter]() {
+        const auto oldAxisOutputRule = formatter->outputAxis();
+        if (oldAxisOutputRule ==
+            io::WKTFormatter::OutputAxisRule::WKT1_GDAL_EPSG_STYLE) {
+            if (&axisList[0]->direction() == &cs::AxisDirection::EAST &&
+                &axisList[1]->direction() == &cs::AxisDirection::NORTH) {
+                formatter->setOutputAxis(io::WKTFormatter::OutputAxisRule::YES);
+            }
+        }
+        l_coordinateSystem->_exportToWKT(formatter);
+        formatter->setOutputAxis(oldAxisOutputRule);
+    };
+
     if (!isWKT2 && !formatter->useESRIDialect() &&
         starts_with(nameStr(), "Popular Visualisation CRS / Mercator")) {
         formatter->startNode(io::WKTConstants::PROJCS, !identifiers().empty());
@@ -2263,9 +2287,8 @@ void ProjectedCRS::_exportToWKT(io::WKTFormatter *formatter) const {
         formatter->add(0.0);
         formatter->endNode();
 
-        const auto &axisList = d->coordinateSystem()->axisList();
         axisList[0]->unit()._exportToWKT(formatter);
-        d->coordinateSystem()->_exportToWKT(formatter);
+        exportAxis();
         derivingConversionRef()->addWKTExtensionNode(formatter);
         ObjectUsage::baseExportToWKT(formatter);
         formatter->endNode();
@@ -2321,7 +2344,6 @@ void ProjectedCRS::_exportToWKT(io::WKTFormatter *formatter) const {
         l_baseCRS->_exportToWKT(formatter);
     }
 
-    const auto &axisList = d->coordinateSystem()->axisList();
     formatter->pushAxisLinearUnit(
         common::UnitOfMeasure::create(axisList[0]->unit()));
 
@@ -2338,7 +2360,7 @@ void ProjectedCRS::_exportToWKT(io::WKTFormatter *formatter) const {
         axisList[0]->unit()._exportToWKT(formatter);
     }
 
-    d->coordinateSystem()->_exportToWKT(formatter);
+    exportAxis();
 
     if (!isWKT2 && !formatter->useESRIDialect()) {
         derivingConversionRef()->addWKTExtensionNode(formatter);
