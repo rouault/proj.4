@@ -252,9 +252,11 @@ static const ParamMapping *const paramsEQDC[] = {&paramLatNatLatCenter,
 static const ParamMapping *const paramsLonNatOrigin[] = {
     &paramLongitudeNatOrigin, &paramFalseEasting, &paramFalseNorthing, nullptr};
 
-static const ParamMapping *const paramsEqc[] = // same as paramsCEA
-    {&paramLat1stParallelLatTs, &paramLongitudeNatOrigin, &paramFalseEasting,
-     &paramFalseNorthing, nullptr};
+static const ParamMapping *const paramsEqc[] = {
+    &paramLat1stParallelLatTs,
+    &paramLatitudeNatOrigin, // extension of EPSG, but used by GDAL / PROJ
+    &paramLongitudeNatOrigin,  &paramFalseEasting,
+    &paramFalseNorthing,       nullptr};
 
 static const ParamMapping paramSatelliteHeight = {
     "Satellite Height", 0, "satellite_height",

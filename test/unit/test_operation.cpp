@@ -1986,7 +1986,7 @@ TEST(operation, createEquidistantCylindrical) {
         PropertyMap(), Angle(1), Angle(2), Length(3), Length(4));
 
     EXPECT_EQ(conv->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=eqc +lat_ts=1 +lon_0=2 +x_0=3 +y_0=4");
+              "+proj=eqc +lat_ts=1 +lat_0=0 +lon_0=2 +x_0=3 +y_0=4");
 
     EXPECT_EQ(conv->exportToWKT(WKTFormatter::create().get()),
               "CONVERSION[\"Equidistant Cylindrical\",\n"
@@ -2022,7 +2022,7 @@ TEST(operation, createEquidistantCylindricalSpherical) {
         PropertyMap(), Angle(1), Angle(2), Length(3), Length(4));
 
     EXPECT_EQ(conv->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=eqc +lat_ts=1 +lon_0=2 +x_0=3 +y_0=4");
+              "+proj=eqc +lat_ts=1 +lat_0=0 +lon_0=2 +x_0=3 +y_0=4");
 
     EXPECT_EQ(conv->exportToWKT(WKTFormatter::create().get()),
               "CONVERSION[\"Equidistant Cylindrical (Spherical)\",\n"
@@ -2049,6 +2049,28 @@ TEST(operation, createEquidistantCylindricalSpherical) {
         "PARAMETER[\"central_meridian\",2],\n"
         "PARAMETER[\"false_easting\",3],\n"
         "PARAMETER[\"false_northing\",4]");
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(operation, equidistant_cylindrical_lat_0) {
+
+    auto obj = PROJStringParser().createFromPROJString(
+        "+proj=eqc +ellps=sphere +lat_0=-2 +lat_ts=1 +lon_0=-10");
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    auto wkt = crs->exportToWKT(WKTFormatter::create().get());
+    EXPECT_TRUE(wkt.find("PARAMETER[\"Latitude of natural origin\",-2") !=
+                std::string::npos)
+        << wkt;
+
+    auto projString = crs->exportToPROJString(
+        PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+            .get());
+    EXPECT_EQ(projString,
+              "+proj=eqc +lat_ts=1 +lat_0=-2 +lon_0=-10 +x_0=0 +y_0=0 "
+              "+ellps=sphere +units=m +no_defs");
 }
 
 // ---------------------------------------------------------------------------

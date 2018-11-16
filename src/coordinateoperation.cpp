@@ -2879,7 +2879,7 @@ ConversionNNPtr Conversion::createEquidistantCylindrical(
     const common::Angle &longitudeNatOrigin, const common::Length &falseEasting,
     const common::Length &falseNorthing) {
     return create(properties, EPSG_CODE_METHOD_EQUIDISTANT_CYLINDRICAL,
-                  createParams(latitudeFirstParallel, longitudeNatOrigin,
+                  createParams(latitudeFirstParallel, 0.0, longitudeNatOrigin,
                                falseEasting, falseNorthing));
 }
 
@@ -2914,7 +2914,7 @@ ConversionNNPtr Conversion::createEquidistantCylindricalSpherical(
     const common::Length &falseNorthing) {
     return create(properties,
                   EPSG_CODE_METHOD_EQUIDISTANT_CYLINDRICAL_SPHERICAL,
-                  createParams(latitudeFirstParallel, longitudeNatOrigin,
+                  createParams(latitudeFirstParallel, 0.0, longitudeNatOrigin,
                                falseEasting, falseNorthing));
 }
 
@@ -4790,8 +4790,30 @@ void Conversion::_exportToWKT(io::WKTFormatter *formatter) const {
 
         const MethodMapping *mapping =
             !isWKT2 ? getMapping(l_method.get()) : nullptr;
-        for (const auto &paramValue : parameterValues()) {
-            paramValue->_exportToWKT(formatter, mapping);
+        for (const auto &genOpParamvalue : parameterValues()) {
+
+            // EPSG has normally no Latitude of natural origin for Equidistant
+            // Cylindrical but PROJ can handle it, so output the parameter if
+            // not zero
+            if ((methodEPSGCode == EPSG_CODE_METHOD_EQUIDISTANT_CYLINDRICAL ||
+                 methodEPSGCode ==
+                     EPSG_CODE_METHOD_EQUIDISTANT_CYLINDRICAL_SPHERICAL)) {
+                auto opParamvalue =
+                    dynamic_cast<const OperationParameterValue *>(
+                        genOpParamvalue.get());
+                if (opParamvalue &&
+                    opParamvalue->parameter()->getEPSGCode() ==
+                        EPSG_CODE_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN) {
+                    const auto &paramValue = opParamvalue->parameterValue();
+                    if (paramValue->type() == ParameterValue::Type::MEASURE) {
+                        const auto &measure = paramValue->value();
+                        if (measure.getSIValue() == 0) {
+                            continue;
+                        }
+                    }
+                }
+            }
+            genOpParamvalue->_exportToWKT(formatter, mapping);
         }
     }
 
