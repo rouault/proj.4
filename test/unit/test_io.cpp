@@ -6513,6 +6513,39 @@ TEST(io, projparse_geocent) {
 
 // ---------------------------------------------------------------------------
 
+TEST(io, projparse_geocent_towgs84) {
+    auto obj = PROJStringParser().createFromPROJString(
+        "+proj=geocent +ellps=WGS84 +towgs84=1,2,3");
+    auto crs = nn_dynamic_pointer_cast<BoundCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    WKTFormatterNNPtr f(WKTFormatter::create());
+    f->simulCurNodeHasId();
+    f->setMultiLine(false);
+    crs->exportToWKT(f.get());
+    auto wkt = f->toString();
+    EXPECT_TRUE(
+        wkt.find("METHOD[\"Geocentric translations (geocentric domain)") !=
+        std::string::npos)
+        << wkt;
+    EXPECT_TRUE(wkt.find("PARAMETER[\"X-axis translation\",1") !=
+                std::string::npos)
+        << wkt;
+    EXPECT_TRUE(wkt.find("PARAMETER[\"Y-axis translation\",2") !=
+                std::string::npos)
+        << wkt;
+    EXPECT_TRUE(wkt.find("PARAMETER[\"Z-axis translation\",3") !=
+                std::string::npos)
+        << wkt;
+
+    EXPECT_EQ(
+        crs->exportToPROJString(
+            PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+                .get()),
+        "+proj=geocent +ellps=WGS84 +towgs84=1,2,3,0,0,0,0 +no_defs");
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(io, projparse_cart_unit) {
     std::string input(
         "+proj=pipeline +step +proj=cart +ellps=WGS84 +step "

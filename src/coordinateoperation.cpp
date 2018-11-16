@@ -6197,32 +6197,36 @@ TransformationNNPtr Transformation::createTOWGS84(
             "Invalid number of elements in TOWGS84Parameters");
     }
 
-    crs::CRSPtr transformSourceCRS = sourceCRSIn->extractGeographicCRS();
+    crs::CRSPtr transformSourceCRS = sourceCRSIn->extractGeodeticCRS();
     if (!transformSourceCRS) {
         throw InvalidOperation(
-            "Cannot find GeographicCRS in sourceCRS of TOWGS84 transformation");
+            "Cannot find GeodeticCRS in sourceCRS of TOWGS84 transformation");
     }
+
+    util::PropertyMap properties;
+    properties.set(common::IdentifiedObject::NAME_KEY,
+                   concat("Transformation from ", transformSourceCRS->nameStr(),
+                          " to WGS84"));
+
+    auto targetCRS =
+        dynamic_cast<const crs::GeographicCRS *>(transformSourceCRS.get())
+            ? util::nn_static_pointer_cast<crs::CRS>(
+                  crs::GeographicCRS::EPSG_4326)
+            : util::nn_static_pointer_cast<crs::CRS>(
+                  crs::GeodeticCRS::EPSG_4978);
 
     if (TOWGS84Parameters.size() == 3) {
         return createGeocentricTranslations(
-            util::PropertyMap().set(common::IdentifiedObject::NAME_KEY,
-                                    concat("Transformation from ",
-                                           transformSourceCRS->nameStr(),
-                                           " to WGS84")),
-            NN_NO_CHECK(transformSourceCRS), crs::GeographicCRS::EPSG_4326,
+            properties, NN_NO_CHECK(transformSourceCRS), targetCRS,
             TOWGS84Parameters[0], TOWGS84Parameters[1], TOWGS84Parameters[2],
             {});
     }
 
-    return createPositionVector(
-        util::PropertyMap().set(common::IdentifiedObject::NAME_KEY,
-                                concat("Transformation from ",
-                                       transformSourceCRS->nameStr(),
-                                       " to WGS84")),
-        NN_NO_CHECK(transformSourceCRS), crs::GeographicCRS::EPSG_4326,
-        TOWGS84Parameters[0], TOWGS84Parameters[1], TOWGS84Parameters[2],
-        TOWGS84Parameters[3], TOWGS84Parameters[4], TOWGS84Parameters[5],
-        TOWGS84Parameters[6], {});
+    return createPositionVector(properties, NN_NO_CHECK(transformSourceCRS),
+                                targetCRS, TOWGS84Parameters[0],
+                                TOWGS84Parameters[1], TOWGS84Parameters[2],
+                                TOWGS84Parameters[3], TOWGS84Parameters[4],
+                                TOWGS84Parameters[5], TOWGS84Parameters[6], {});
 }
 
 // ---------------------------------------------------------------------------

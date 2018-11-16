@@ -5442,7 +5442,7 @@ static const struct DatumDesc {
 
 // ---------------------------------------------------------------------------
 
-static bool isGeodeticStep(const std::string &name) {
+static bool isGeographicStep(const std::string &name) {
     return name == "longlat" || name == "lonlat" || name == "latlong" ||
            name == "latlon";
 }
@@ -5889,7 +5889,7 @@ PROJStringParser::Private::buildGeographicCRS(int iStep, int iUnitConvert,
                                               bool ignorePROJAxis) {
     const auto &step = steps_[iStep];
 
-    const auto &title = isGeodeticStep(step.name) ? title_ : emptyString;
+    const auto &title = isGeographicStep(step.name) ? title_ : emptyString;
 
     auto datum = buildDatum(step, title);
 
@@ -6672,10 +6672,11 @@ PROJStringParser::createFromPROJString(const std::string &projString) {
     if ((d->steps_.size() == 1 ||
          (d->steps_.size() == 2 && d->steps_[1].name == "unitconvert")) &&
         isGeocentricStep(d->steps_[0].name)) {
-        return d->buildGeocentricCRS(
-            0, (d->steps_.size() == 2 && d->steps_[1].name == "unitconvert")
-                   ? 1
-                   : -1);
+        return d->buildBoundOrCompoundCRSIfNeeded(
+            0, d->buildGeocentricCRS(0, (d->steps_.size() == 2 &&
+                                         d->steps_[1].name == "unitconvert")
+                                            ? 1
+                                            : -1));
     }
 
     int iFirstGeogStep = -1;
@@ -6692,7 +6693,7 @@ PROJStringParser::createFromPROJString(const std::string &projString) {
     bool unexpectedStructure = false;
     for (int i = 0; i < static_cast<int>(d->steps_.size()); i++) {
         const auto &stepName = d->steps_[i].name;
-        if (isGeodeticStep(stepName)) {
+        if (isGeographicStep(stepName)) {
             if (iFirstGeogStep < 0) {
                 iFirstGeogStep = i;
             } else if (iSecondGeogStep < 0) {
