@@ -827,12 +827,17 @@ void OperationMethod::_exportToWKT(io::WKTFormatter *formatter) const {
         if (mapping == nullptr) {
             l_name = replaceAll(l_name, " ", "_");
         } else {
-            if (mapping->wkt1_name == nullptr) {
-                throw io::FormattingException(
-                    std::string("Unsupported conversion method: ") +
-                    mapping->wkt2_name);
+            if (l_name ==
+                PROJ_WKT2_NAME_METHOD_GEOSTATIONARY_SATELLITE_SWEEP_X) {
+                l_name = "Geostationary_Satellite";
+            } else {
+                if (mapping->wkt1_name == nullptr) {
+                    throw io::FormattingException(
+                        std::string("Unsupported conversion method: ") +
+                        mapping->wkt2_name);
+                }
+                l_name = mapping->wkt1_name;
             }
-            l_name = mapping->wkt1_name;
         }
     }
     formatter->addQuotedString(l_name);
@@ -4947,6 +4952,17 @@ bool Conversion::addWKTExtensionNode(io::WKTFormatter *formatter) const {
                 formatter->endNode();
                 return true;
             }
+        } else if (methodName ==
+                   PROJ_WKT2_NAME_METHOD_GEOSTATIONARY_SATELLITE_SWEEP_X) {
+            auto projFormatter = io::PROJStringFormatter::create(
+                io::PROJStringFormatter::Convention::PROJ_4);
+            formatter->startNode(io::WKTConstants::EXTENSION, false);
+            formatter->addQuotedString("PROJ4");
+            _exportToPROJString(projFormatter.get());
+            projFormatter->addParam("no_defs");
+            formatter->addQuotedString(projFormatter->toString());
+            formatter->endNode();
+            return true;
         }
     }
     return false;

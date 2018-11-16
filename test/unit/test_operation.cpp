@@ -2173,10 +2173,18 @@ TEST(operation, geostationary_satellite_sweep_x_export) {
               "        LENGTHUNIT[\"metre\",1],\n"
               "        ID[\"EPSG\",8807]]]");
 
-    EXPECT_THROW(
-        conv->exportToWKT(
-            WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL).get()),
-        FormattingException);
+    auto crs = ProjectedCRS::create(
+        PropertyMap(), GeographicCRS::EPSG_4326, conv,
+        CartesianCS::createEastingNorthing(UnitOfMeasure::METRE));
+    auto wkt1 = crs->exportToWKT(
+        WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL).get());
+    EXPECT_TRUE(wkt1.find("PROJECTION[\"Geostationary_Satellite\"]") !=
+                std::string::npos)
+        << wkt1;
+    EXPECT_TRUE(wkt1.find("EXTENSION[\"PROJ4\",\"+proj=geos +sweep=x +lon_0=1 "
+                          "+h=2 +x_0=3 +y_0=4 +datum=WGS84 +units=m "
+                          "+no_defs\"]]") != std::string::npos)
+        << wkt1;
 }
 
 // ---------------------------------------------------------------------------
