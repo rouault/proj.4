@@ -355,7 +355,7 @@ static const ParamMapping paramColatitudeConeAxis = {
     EPSG_NAME_PARAMETER_COLATITUDE_CONE_AXIS,
     EPSG_CODE_PARAMETER_COLATITUDE_CONE_AXIS, WKT1_AZIMUTH,
     common::UnitOfMeasure::Type::ANGULAR,
-    nullptr}; /* ignored by PROJ currently */
+    "alpha"}; /* ignored by PROJ currently */
 
 static const ParamMapping paramLatitudePseudoStdParallel = {
     EPSG_NAME_PARAMETER_LATITUDE_PSEUDO_STANDARD_PARALLEL,

@@ -2467,7 +2467,8 @@ TEST(operation, krovak_north_oriented_export) {
         Angle(78.5), Scale(0.9999), Length(5), Length(6));
 
     EXPECT_EQ(conv->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=krovak +lat_0=49.5 +lon_0=42.5 +k=0.9999 +x_0=5 +y_0=6");
+              "+proj=krovak +lat_0=49.5 +lon_0=42.5 +alpha=30.2881397222222 "
+              "+k=0.9999 +x_0=5 +y_0=6");
 
     EXPECT_EQ(
         conv->exportToWKT(WKTFormatter::create().get()),
@@ -2517,7 +2518,8 @@ TEST(operation, krovak_export) {
         Angle(78.5), Scale(0.9999), Length(5), Length(6));
 
     EXPECT_EQ(conv->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=krovak +axis=swu +lat_0=49.5 +lon_0=42.5 +k=0.9999 +x_0=5 "
+              "+proj=krovak +axis=swu +lat_0=49.5 +lon_0=42.5 "
+              "+alpha=30.2881397222222 +k=0.9999 +x_0=5 "
               "+y_0=6");
 
     EXPECT_EQ(

@@ -942,7 +942,8 @@ TEST(wkt_parse, wkt1_krovak_south_west) {
     auto expectedPROJString =
         "+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad "
         "+step +proj=krovak +axis=swu +lat_0=49.5 "
-        "+lon_0=24.8333333333333 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel";
+        "+lon_0=24.8333333333333 +alpha=30.2881397222222 "
+        "+k=0.9999 +x_0=0 +y_0=0 +ellps=bessel";
     EXPECT_EQ(projString, expectedPROJString);
 
     obj = PROJStringParser().createFromPROJString(projString);
@@ -1043,7 +1044,7 @@ TEST(wkt_parse, wkt1_krovak_north_oriented) {
     EXPECT_EQ(crs->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad "
               "+step +proj=krovak +lat_0=49.5 +lon_0=24.8333333333333 "
-              "+k=0.9999 +x_0=0 +y_0=0 +ellps=bessel");
+              "+alpha=30.2881397222222 +k=0.9999 +x_0=0 +y_0=0 +ellps=bessel");
 }
 
 // ---------------------------------------------------------------------------
