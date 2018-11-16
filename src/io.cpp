@@ -3089,7 +3089,7 @@ ConversionNNPtr WKTParser::Private::buildProjectionStandard(
                                                       defaultLinearUnit,
                                                       defaultAngularUnit);
                     mapParameters.insert(std::pair<std::string, Measure>(
-                        wkt1ParameterName, Measure(val, unit)));
+                        tolower(wkt1ParameterName), Measure(val, unit)));
                 } catch (const std::exception &) {
                 }
             }
