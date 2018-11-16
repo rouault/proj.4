@@ -2410,7 +2410,7 @@ TEST(operation, hotine_oblique_mercator_two_point_natural_origin_export) {
         conv->exportToWKT(
             WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL).get()),
         "PROJECTION[\"Hotine_Oblique_Mercator_Two_Point_Natural_Origin\"],\n"
-        "PARAMETER[\"latitude_of_origin\",1],\n"
+        "PARAMETER[\"latitude_of_center\",1],\n"
         "PARAMETER[\"latitude_of_point_1\",2],\n"
         "PARAMETER[\"longitude_of_point_1\",3],\n"
         "PARAMETER[\"latitude_of_point_2\",4],\n"

@@ -331,7 +331,7 @@ static const ParamMapping paramLonPoint2 = {
     common::UnitOfMeasure::Type::ANGULAR, lon_2};
 
 static const ParamMapping *const paramsHomTwoPoint[] = {
-    &paramLatCentreLatOrigin,
+    &paramLatCentreLatCenter,
     &paramLatPoint1,
     &paramLonPoint1,
     &paramLatPoint2,
