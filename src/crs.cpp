@@ -87,6 +87,7 @@ namespace crs {
 //! @cond Doxygen_Suppress
 struct CRS::Private {
     BoundCRSPtr canonicalBoundCRS_{};
+    std::string extensionProj4_{};
 };
 //! @endcond
 
@@ -745,6 +746,8 @@ GeodeticCRS::create(const util::PropertyMap &properties,
         GeodeticCRS::nn_make_shared<GeodeticCRS>(datum, datumEnsemble, cs));
     crs->assignSelf(crs);
     crs->setProperties(properties);
+    properties.getStringValue("EXTENSION_PROJ4",
+                              crs->CRS::getPrivate()->extensionProj4_);
     return crs;
 }
 
@@ -789,6 +792,8 @@ GeodeticCRS::create(const util::PropertyMap &properties,
         GeodeticCRS::nn_make_shared<GeodeticCRS>(datum, datumEnsemble, cs));
     crs->assignSelf(crs);
     crs->setProperties(properties);
+    properties.getStringValue("EXTENSION_PROJ4",
+                              crs->CRS::getPrivate()->extensionProj4_);
     return crs;
 }
 
@@ -850,6 +855,17 @@ void GeodeticCRS::_exportToWKT(io::WKTFormatter *formatter) const {
     }
     cs->_exportToWKT(formatter);
     ObjectUsage::baseExportToWKT(formatter);
+
+    if (!isWKT2 && !formatter->useESRIDialect()) {
+        const auto &extensionProj4 = CRS::getPrivate()->extensionProj4_;
+        if (!extensionProj4.empty()) {
+            formatter->startNode(io::WKTConstants::EXTENSION, false);
+            formatter->addQuotedString("PROJ4");
+            formatter->addQuotedString(extensionProj4);
+            formatter->endNode();
+        }
+    }
+
     formatter->endNode();
 }
 //! @endcond
@@ -895,6 +911,16 @@ void GeodeticCRS::addGeocentricUnitConversionIntoPROJString(
 void GeodeticCRS::_exportToPROJString(
     io::PROJStringFormatter *formatter) const // throw(io::FormattingException)
 {
+    if (formatter->convention() ==
+        io::PROJStringFormatter::Convention::PROJ_4) {
+        const auto &extensionProj4 = CRS::getPrivate()->extensionProj4_;
+        if (!extensionProj4.empty()) {
+            formatter->ingestPROJString(extensionProj4);
+            formatter->addNoDefs(false);
+            return;
+        }
+    }
+
     if (!isGeocentric()) {
         io::FormattingException::Throw(
             "GeodeticCRS::exportToPROJString() only "
@@ -1421,6 +1447,8 @@ GeographicCRS::create(const util::PropertyMap &properties,
         GeographicCRS::nn_make_shared<GeographicCRS>(datum, datumEnsemble, cs));
     crs->assignSelf(crs);
     crs->setProperties(properties);
+    properties.getStringValue("EXTENSION_PROJ4",
+                              crs->CRS::getPrivate()->extensionProj4_);
     return crs;
 }
 
@@ -1626,6 +1654,16 @@ void GeographicCRS::addAngularUnitConvertAndAxisSwap(
 void GeographicCRS::_exportToPROJString(
     io::PROJStringFormatter *formatter) const // throw(io::FormattingException)
 {
+    if (formatter->convention() ==
+        io::PROJStringFormatter::Convention::PROJ_4) {
+        const auto &extensionProj4 = CRS::getPrivate()->extensionProj4_;
+        if (!extensionProj4.empty()) {
+            formatter->ingestPROJString(extensionProj4);
+            formatter->addNoDefs(false);
+            return;
+        }
+    }
+
     if (!formatter->omitProjLongLatIfPossible() ||
         primeMeridian()->longitude().getSIValue() != 0.0 ||
         !formatter->getTOWGS84Parameters().empty() ||
@@ -2363,7 +2401,15 @@ void ProjectedCRS::_exportToWKT(io::WKTFormatter *formatter) const {
     exportAxis();
 
     if (!isWKT2 && !formatter->useESRIDialect()) {
-        derivingConversionRef()->addWKTExtensionNode(formatter);
+        const auto &extensionProj4 = CRS::getPrivate()->extensionProj4_;
+        if (!extensionProj4.empty()) {
+            formatter->startNode(io::WKTConstants::EXTENSION, false);
+            formatter->addQuotedString("PROJ4");
+            formatter->addQuotedString(extensionProj4);
+            formatter->endNode();
+        } else {
+            derivingConversionRef()->addWKTExtensionNode(formatter);
+        }
     }
 
     ObjectUsage::baseExportToWKT(formatter);
@@ -2377,6 +2423,16 @@ void ProjectedCRS::_exportToWKT(io::WKTFormatter *formatter) const {
 void ProjectedCRS::_exportToPROJString(
     io::PROJStringFormatter *formatter) const // throw(io::FormattingException)
 {
+    if (formatter->convention() ==
+        io::PROJStringFormatter::Convention::PROJ_4) {
+        const auto &extensionProj4 = CRS::getPrivate()->extensionProj4_;
+        if (!extensionProj4.empty()) {
+            formatter->ingestPROJString(extensionProj4);
+            formatter->addNoDefs(false);
+            return;
+        }
+    }
+
     baseExportToPROJString(formatter);
 }
 
@@ -2406,6 +2462,8 @@ ProjectedCRS::create(const util::PropertyMap &properties,
     crs->assignSelf(crs);
     crs->setProperties(properties);
     crs->setDerivingConversionCRS();
+    properties.getStringValue("EXTENSION_PROJ4",
+                              crs->CRS::getPrivate()->extensionProj4_);
     return crs;
 }
 

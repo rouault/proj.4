@@ -4903,7 +4903,7 @@ createPROJExtensionFromCustomProj(const Conversion *conv,
 
 // ---------------------------------------------------------------------------
 
-void Conversion::addWKTExtensionNode(io::WKTFormatter *formatter) const {
+bool Conversion::addWKTExtensionNode(io::WKTFormatter *formatter) const {
     const bool isWKT2 = formatter->version() == io::WKTFormatter::Version::WKT2;
     if (!isWKT2) {
         const auto &l_method = method();
@@ -4922,6 +4922,7 @@ void Conversion::addWKTExtensionNode(io::WKTFormatter *formatter) const {
             projFormatter->addParam("no_defs");
             formatter->addQuotedString(projFormatter->toString());
             formatter->endNode();
+            return true;
         } else if (methodEPSGCode ==
                        EPSG_CODE_METHOD_POPULAR_VISUALISATION_PSEUDO_MERCATOR ||
                    nameStr() == "Popular Visualisation Mercator") {
@@ -4933,6 +4934,7 @@ void Conversion::addWKTExtensionNode(io::WKTFormatter *formatter) const {
                 formatter->addQuotedString("PROJ4");
                 formatter->addQuotedString(projFormatter->toString());
                 formatter->endNode();
+                return true;
             }
         } else if (starts_with(methodName, "PROJ ")) {
             auto projFormatter = io::PROJStringFormatter::create(
@@ -4943,9 +4945,11 @@ void Conversion::addWKTExtensionNode(io::WKTFormatter *formatter) const {
                 formatter->addQuotedString("PROJ4");
                 formatter->addQuotedString(projFormatter->toString());
                 formatter->endNode();
+                return true;
             }
         }
     }
+    return false;
 }
 
 // ---------------------------------------------------------------------------

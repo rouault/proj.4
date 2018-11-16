@@ -1297,7 +1297,7 @@ class PROJ_GCC_DLL Conversion : public SingleOperation {
     INLINED_MAKE_SHARED
 
     PROJ_FRIEND(crs::ProjectedCRS);
-    PROJ_INTERNAL void addWKTExtensionNode(io::WKTFormatter *formatter) const;
+    PROJ_INTERNAL bool addWKTExtensionNode(io::WKTFormatter *formatter) const;
 
   private:
     PROJ_OPAQUE_PRIVATE_DATA

@@ -453,6 +453,69 @@ static std::string contentWKT2_EPSG_4326(
 
 // ---------------------------------------------------------------------------
 
+TEST(wkt_parse, wkt1_geographic_with_PROJ4_extension) {
+    auto wkt = "GEOGCS[\"WGS 84\",\n"
+               "    DATUM[\"unknown\",\n"
+               "        SPHEROID[\"WGS84\",6378137,298.257223563]],\n"
+               "    PRIMEM[\"Greenwich\",0],\n"
+               "    UNIT[\"degree\",0.0174532925199433],\n"
+               "    EXTENSION[\"PROJ4\",\"+proj=longlat +foo=bar +wktext\"]]";
+    auto obj = WKTParser().createFromWKT(wkt);
+
+    auto crs = nn_dynamic_pointer_cast<GeographicCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    EXPECT_EQ(
+        crs->exportToWKT(
+            WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL).get()),
+        wkt);
+
+    EXPECT_EQ(
+        crs->exportToPROJString(
+            PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+                .get()),
+        "+proj=longlat +foo=bar +wktext");
+
+    EXPECT_TRUE(
+        crs->exportToWKT(WKTFormatter::create().get()).find("EXTENSION") ==
+        std::string::npos);
+
+    EXPECT_TRUE(
+        crs->exportToWKT(
+               WKTFormatter::create(WKTFormatter::Convention::WKT1_ESRI).get())
+            .find("EXTENSION") == std::string::npos);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(wkt_parse, wkt1_geocentric_with_PROJ4_extension) {
+    auto wkt = "GEOCCS[\"WGS 84\",\n"
+               "    DATUM[\"unknown\",\n"
+               "        SPHEROID[\"WGS84\",6378137,298.257223563]],\n"
+               "    PRIMEM[\"Greenwich\",0],\n"
+               "    UNIT[\"Meter\",1],\n"
+               "    EXTENSION[\"PROJ4\",\"+proj=geocent +foo=bar +wktext\"]]";
+    auto obj = WKTParser().createFromWKT(wkt);
+
+    auto crs = nn_dynamic_pointer_cast<GeodeticCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    EXPECT_EQ(
+        crs->exportToWKT(
+            WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL).get()),
+        wkt);
+
+    EXPECT_EQ(
+        crs->exportToPROJString(
+            PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+                .get()),
+        "+proj=geocent +foo=bar +wktext");
+
+    EXPECT_TRUE(
+        crs->exportToWKT(WKTFormatter::create().get()).find("EXTENSION") ==
+        std::string::npos);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(wkt_parse, wkt2_GEODCRS_EPSG_4326) {
     auto obj = WKTParser().createFromWKT("GEODCRS" + contentWKT2_EPSG_4326);
     auto crs = nn_dynamic_pointer_cast<GeographicCRS>(obj);
@@ -856,6 +919,49 @@ TEST(wkt_parse, wkt1_projected_no_axis) {
     auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
     ASSERT_TRUE(crs != nullptr);
     checkProjected(crs);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(wkt_parse, wkt1_projected_with_PROJ4_extension) {
+    auto wkt = "PROJCS[\"unnamed\",\n"
+               "    GEOGCS[\"WGS 84\",\n"
+               "        DATUM[\"unknown\",\n"
+               "            SPHEROID[\"WGS84\",6378137,298.257223563]],\n"
+               "        PRIMEM[\"Greenwich\",0],\n"
+               "        UNIT[\"degree\",0.0174532925199433]],\n"
+               "    PROJECTION[\"Mercator_1SP\"],\n"
+               "    PARAMETER[\"central_meridian\",0],\n"
+               "    PARAMETER[\"scale_factor\",1],\n"
+               "    PARAMETER[\"false_easting\",0],\n"
+               "    PARAMETER[\"false_northing\",0],\n"
+               "    UNIT[\"Meter\",1],\n"
+               "    AXIS[\"Easting\",EAST],\n"
+               "    AXIS[\"Northing\",NORTH],\n"
+               "    EXTENSION[\"PROJ4\",\"+proj=merc +wktext\"]]";
+    auto obj = WKTParser().createFromWKT(wkt);
+
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    EXPECT_EQ(
+        crs->exportToWKT(
+            WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL).get()),
+        wkt);
+
+    EXPECT_EQ(
+        crs->exportToPROJString(
+            PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+                .get()),
+        "+proj=merc +wktext");
+
+    EXPECT_TRUE(
+        crs->exportToWKT(WKTFormatter::create().get()).find("EXTENSION") ==
+        std::string::npos);
+
+    EXPECT_TRUE(
+        crs->exportToWKT(
+               WKTFormatter::create(WKTFormatter::Convention::WKT1_ESRI).get())
+            .find("EXTENSION") == std::string::npos);
 }
 
 // ---------------------------------------------------------------------------
@@ -6785,6 +6891,48 @@ TEST(io, projparse_cart_unit_numeric) {
     EXPECT_EQ(
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_5)
+                .get()),
+        input);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(io, projparse_longlat_wktext) {
+    std::string input("+proj=longlat +foo +wktext");
+    auto obj = PROJStringParser().createFromPROJString(input);
+    auto crs = nn_dynamic_pointer_cast<GeodeticCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    EXPECT_EQ(
+        crs->exportToPROJString(
+            PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+                .get()),
+        input);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(io, projparse_geocent_wktext) {
+    std::string input("+proj=geocent +foo +wktext");
+    auto obj = PROJStringParser().createFromPROJString(input);
+    auto crs = nn_dynamic_pointer_cast<GeodeticCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    EXPECT_EQ(
+        crs->exportToPROJString(
+            PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+                .get()),
+        input);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(io, projparse_projected_wktext) {
+    std::string input("+proj=merc +foo +wktext");
+    auto obj = PROJStringParser().createFromPROJString(input);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    EXPECT_EQ(
+        crs->exportToPROJString(
+            PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
         input);
 }

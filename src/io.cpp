@@ -1188,6 +1188,9 @@ struct WKTParser::Private {
                            const UnitOfMeasure &defaultLinearUnit,
                            const UnitOfMeasure &defaultAngularUnit);
 
+    static void addExtensionProj4ToProp(const WKTNode::Private *nodeP,
+                                        PropertyMap &props);
+
     ConversionNNPtr buildConversion(const WKTNodeNNPtr &node,
                                     const UnitOfMeasure &defaultLinearUnit,
                                     const UnitOfMeasure &defaultAngularUnit);
@@ -1946,6 +1949,7 @@ GeodeticReferenceFrameNNPtr WKTParser::Private::buildGeodeticReferenceFrame(
             throw ParsingException("Invalid TOWGS84 node");
         }
     }
+
     auto &extensionNode = nodeP->lookForChild(WKTConstants::EXTENSION);
     const auto &extensionChildren = extensionNode->GP()->children();
     if (extensionChildren.size() == 2) {
@@ -2409,6 +2413,19 @@ WKTParser::Private::buildCS(const WKTNodeNNPtr &node, /* maybe null */
 
 // ---------------------------------------------------------------------------
 
+void WKTParser::Private::addExtensionProj4ToProp(const WKTNode::Private *nodeP,
+                                                 PropertyMap &props) {
+    auto &extensionNode = nodeP->lookForChild(WKTConstants::EXTENSION);
+    const auto &extensionChildren = extensionNode->GP()->children();
+    if (extensionChildren.size() == 2) {
+        if (ci_equal(stripQuotes(extensionChildren[0]), "PROJ4")) {
+            props.set("EXTENSION_PROJ4", stripQuotes(extensionChildren[1]));
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+
 GeodeticCRSNNPtr
 WKTParser::Private::buildGeodeticCRS(const WKTNodeNNPtr &node) {
     const auto *nodeP = node->GP();
@@ -2456,6 +2473,9 @@ WKTParser::Private::buildGeodeticCRS(const WKTNodeNNPtr &node) {
         angularUnit = primeMeridian->longitude().unit();
     }
 
+    auto props = buildProperties(node);
+    addExtensionProj4ToProp(nodeP, props);
+
     auto datum =
         !isNull(datumNode)
             ? buildGeodeticReferenceFrame(datumNode, primeMeridian, dynamicNode)
@@ -2471,8 +2491,7 @@ WKTParser::Private::buildGeodeticCRS(const WKTNodeNNPtr &node) {
     if (ellipsoidalCS) {
         assert(!ci_equal(nodeName, WKTConstants::GEOCCS));
         try {
-            return GeographicCRS::create(buildProperties(node), datum,
-                                         datumEnsemble,
+            return GeographicCRS::create(props, datum, datumEnsemble,
                                          NN_NO_CHECK(ellipsoidalCS));
         } catch (const util::Exception &e) {
             throw ParsingException(std::string("buildGeodeticCRS: ") +
@@ -2493,8 +2512,8 @@ WKTParser::Private::buildGeodeticCRS(const WKTNodeNNPtr &node) {
                 "Cartesian CS for a GeodeticCRS should have 3 axis");
         }
         try {
-            return GeodeticCRS::create(buildProperties(node), datum,
-                                       datumEnsemble, NN_NO_CHECK(cartesianCS));
+            return GeodeticCRS::create(props, datum, datumEnsemble,
+                                       NN_NO_CHECK(cartesianCS));
         } catch (const util::Exception &e) {
             throw ParsingException(std::string("buildGeodeticCRS: ") +
                                    e.what());
@@ -2504,8 +2523,8 @@ WKTParser::Private::buildGeodeticCRS(const WKTNodeNNPtr &node) {
     auto sphericalCS = nn_dynamic_pointer_cast<SphericalCS>(cs);
     if (sphericalCS) {
         try {
-            return GeodeticCRS::create(buildProperties(node), datum,
-                                       datumEnsemble, NN_NO_CHECK(sphericalCS));
+            return GeodeticCRS::create(props, datum, datumEnsemble,
+                                       NN_NO_CHECK(sphericalCS));
         } catch (const util::Exception &e) {
             throw ParsingException(std::string("buildGeodeticCRS: ") +
                                    e.what());
@@ -3347,6 +3366,8 @@ WKTParser::Private::buildProjectedCRS(const WKTNodeNNPtr &node) {
             }
         }
     }
+
+    addExtensionProj4ToProp(nodeP, props);
 
     return ProjectedCRS::create(props, baseGeodCRS, conversion,
                                 NN_NO_CHECK(cartesianCS));
@@ -4272,7 +4293,8 @@ IPROJStringExportable::~IPROJStringExportable() = default;
 std::string IPROJStringExportable::exportToPROJString(
     PROJStringFormatter *formatter) const {
     _exportToPROJString(formatter);
-    if (formatter->convention() ==
+    if (formatter->getAddNoDefs() &&
+        formatter->convention() ==
             io::PROJStringFormatter::Convention::PROJ_4 &&
         dynamic_cast<const crs::CRS *>(this)) {
         if (!formatter->hasParam("no_defs")) {
@@ -4345,6 +4367,7 @@ struct PROJStringFormatter::Private {
     DatabaseContextPtr dbContext_{};
     bool useETMercForTMerc_ = false;
     bool useETMercForTMercSet_ = false;
+    bool addNoDefs_ = true;
 
     std::string result_{};
 
@@ -5031,6 +5054,14 @@ bool PROJStringFormatter::hasParam(const char *paramName) const {
 
 // ---------------------------------------------------------------------------
 
+void PROJStringFormatter::addNoDefs(bool b) { d->addNoDefs_ = b; }
+
+// ---------------------------------------------------------------------------
+
+bool PROJStringFormatter::getAddNoDefs() const { return d->addNoDefs_; }
+
+// ---------------------------------------------------------------------------
+
 void PROJStringFormatter::addParam(const std::string &paramName) {
     if (d->steps_.empty()) {
         d->addStep();
@@ -5204,6 +5235,8 @@ const DatabaseContextPtr &PROJStringFormatter::databaseContext() const {
 struct PROJStringParser::Private {
     DatabaseContextPtr dbContext_{};
     std::vector<std::string> warningList_{};
+
+    std::string projString_{};
 
     std::vector<Step> steps_{};
     std::vector<Step::KeyValue> globalParamValues_{};
@@ -5909,15 +5942,20 @@ PROJStringParser::Private::buildGeographicCRS(int iStep, int iUnitConvert,
                                               bool ignorePROJAxis) {
     const auto &step = steps_[iStep];
 
-    const auto &title = isGeographicStep(step.name) ? title_ : emptyString;
+    const bool l_isGeographicStep = isGeographicStep(step.name);
+    const auto &title = l_isGeographicStep ? title_ : emptyString;
 
     auto datum = buildDatum(step, title);
 
+    auto props = PropertyMap().set(IdentifiedObject::NAME_KEY,
+                                   title.empty() ? "unknown" : title);
+    if (l_isGeographicStep && hasParamValue(step, "wktext")) {
+        props.set("EXTENSION_PROJ4", projString_);
+    }
+
     return GeographicCRS::create(
-        PropertyMap().set(IdentifiedObject::NAME_KEY,
-                          title.empty() ? "unknown" : title),
-        datum, buildEllipsoidalCS(iStep, iUnitConvert, iAxisSwap, ignoreVUnits,
-                                  ignorePROJAxis));
+        props, datum, buildEllipsoidalCS(iStep, iUnitConvert, iAxisSwap,
+                                         ignoreVUnits, ignorePROJAxis));
 }
 
 // ---------------------------------------------------------------------------
@@ -5968,11 +6006,14 @@ PROJStringParser::Private::buildGeocentricCRS(int iStep, int iUnitConvert) {
         }
     }
 
+    auto props = PropertyMap().set(IdentifiedObject::NAME_KEY,
+                                   title.empty() ? "unknown" : title);
+    if (hasParamValue(step, "wktext")) {
+        props.set("EXTENSION_PROJ4", projString_);
+    }
+
     auto cs = CartesianCS::createGeocentric(unit);
-    return GeodeticCRS::create(
-        PropertyMap().set(IdentifiedObject::NAME_KEY,
-                          title.empty() ? "unknown" : title),
-        datum, cs);
+    return GeodeticCRS::create(props, datum, cs);
 }
 
 // ---------------------------------------------------------------------------
@@ -6379,10 +6420,14 @@ CRSNNPtr PROJStringParser::Private::buildProjectedCRS(
 
     auto cs = CartesianCS::create(emptyPropertyMap, axis[0], axis[1]);
 
-    CRSNNPtr crs = ProjectedCRS::create(
-        PropertyMap().set(IdentifiedObject::NAME_KEY,
-                          title.empty() ? "unknown" : title),
-        geogCRS, NN_NO_CHECK(conv), cs);
+    auto props = PropertyMap().set(IdentifiedObject::NAME_KEY,
+                                   title.empty() ? "unknown" : title);
+
+    if (hasParamValue(step, "wktext")) {
+        props.set("EXTENSION_PROJ4", projString_);
+    }
+
+    CRSNNPtr crs = ProjectedCRS::create(props, geogCRS, NN_NO_CHECK(conv), cs);
 
     if (!hasParamValue(step, "geoidgrids") &&
         (hasParamValue(step, "vunits") || hasParamValue(step, "vto_meter"))) {
@@ -6668,6 +6713,7 @@ PROJStringParser::createFromPROJString(const std::string &projString) {
     std::string vunits;
     std::string vto_meter;
 
+    d->projString_ = projString;
     PROJStringSyntaxParser(projString, d->steps_, d->globalParamValues_,
                            d->title_, vunits, vto_meter);
 
