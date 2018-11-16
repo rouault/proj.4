@@ -5611,13 +5611,31 @@ PROJStringParser::Private::buildDatum(const Step &step,
     PrimeMeridianNNPtr pm(buildPrimeMeridian(step));
     PropertyMap grfMap;
 
+    // It is arguable that we allow the prime meridian of a datum defined by
+    // its name to be overriden, but this is found at least in a regression test
+    // of GDAL. So let's keep the ellipsoid part of the datum in that case and
+    // use the specified prime meridian.
+    const auto overridePmIfNeeded =
+        [&pm](const GeodeticReferenceFrameNNPtr &grf) {
+            if (pm->_isEquivalentTo(PrimeMeridian::GREENWICH.get())) {
+                return grf;
+            } else {
+                return GeodeticReferenceFrame::create(
+                    PropertyMap().set(IdentifiedObject::NAME_KEY,
+                                      "Unknown based on " +
+                                          grf->ellipsoid()->nameStr() +
+                                          " ellipsoid"),
+                    grf->ellipsoid(), grf->anchorDefinition(), pm);
+            }
+        };
+
     if (!datumStr.empty()) {
         if (datumStr == "WGS84") {
-            return GeodeticReferenceFrame::EPSG_6326;
+            return overridePmIfNeeded(GeodeticReferenceFrame::EPSG_6326);
         } else if (datumStr == "NAD83") {
-            return GeodeticReferenceFrame::EPSG_6269;
+            return overridePmIfNeeded(GeodeticReferenceFrame::EPSG_6269);
         } else if (datumStr == "NAD27") {
-            return GeodeticReferenceFrame::EPSG_6267;
+            return overridePmIfNeeded(GeodeticReferenceFrame::EPSG_6267);
         } else {
 
             for (const auto &datumDesc : datumDescs) {
@@ -5797,14 +5815,7 @@ PROJStringParser::Private::buildDatum(const Step &step,
         throw ParsingException("f found, but a missing");
     }
 
-    if (pm->_isEquivalentTo(PrimeMeridian::GREENWICH.get())) {
-        return GeodeticReferenceFrame::EPSG_6326;
-    } else {
-        return GeodeticReferenceFrame::create(
-            grfMap.set(IdentifiedObject::NAME_KEY,
-                       "Unknown based on WGS84 ellipsoid"),
-            Ellipsoid::WGS84, optionalEmptyString, pm);
-    }
+    return overridePmIfNeeded(GeodeticReferenceFrame::EPSG_6326);
 }
 
 // ---------------------------------------------------------------------------
@@ -6154,7 +6165,7 @@ CRSNNPtr PROJStringParser::Private::buildProjectedCRS(
     if (!buildPrimeMeridian(step)->longitude()._isEquivalentTo(
             geogCRS->primeMeridian()->longitude(),
             util::IComparable::Criterion::EQUIVALENT)) {
-        throw ParsingException("inconsistant pm values between projectedCRS "
+        throw ParsingException("inconsistent pm values between projectedCRS "
                                "and its base geographicalCRS");
     }
 

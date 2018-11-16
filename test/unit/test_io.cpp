@@ -5665,7 +5665,7 @@ TEST(io, projparse_longlat_pm_paris) {
     f->simulCurNodeHasId();
     crs->exportToWKT(f.get());
     auto expected = "GEODCRS[\"unknown\",\n"
-                    "    DATUM[\"Unknown based on WGS84 ellipsoid\",\n"
+                    "    DATUM[\"Unknown based on WGS 84 ellipsoid\",\n"
                     "        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n"
                     "            LENGTHUNIT[\"metre\",1]]],\n"
                     "    PRIMEM[\"Paris\",2.5969213,\n"
@@ -5719,7 +5719,7 @@ TEST(io, projparse_longlat_pm_numeric) {
     f->simulCurNodeHasId();
     crs->exportToWKT(f.get());
     auto expected = "GEODCRS[\"unknown\",\n"
-                    "    DATUM[\"Unknown based on WGS84 ellipsoid\",\n"
+                    "    DATUM[\"Unknown based on WGS 84 ellipsoid\",\n"
                     "        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n"
                     "            LENGTHUNIT[\"metre\",1]]],\n"
                     "    PRIMEM[\"unknown\",2.5,\n"
@@ -5733,6 +5733,21 @@ TEST(io, projparse_longlat_pm_numeric) {
                     "            ANGLEUNIT[\"degree\",0.0174532925199433]]]";
 
     EXPECT_EQ(f->toString(), expected);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(io, projparse_longlat_pm_overriding_datum) {
+    // It is arguable that we allow the prime meridian of a datum defined by
+    // its name to be overriden, but this is found at least in a regression test
+    // of GDAL. So let's keep the ellipsoid part of the datum in that case and
+    // use the specified prime meridian.
+    auto obj = PROJStringParser().createFromPROJString(
+        "+proj=longlat +datum=WGS84 +pm=ferro");
+    auto crs = nn_dynamic_pointer_cast<GeographicCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    EXPECT_EQ(crs->datum()->nameStr(), "Unknown based on WGS 84 ellipsoid");
+    EXPECT_EQ(crs->datum()->primeMeridian()->nameStr(), "Ferro");
 }
 
 // ---------------------------------------------------------------------------
