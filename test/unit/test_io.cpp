@@ -1048,6 +1048,140 @@ TEST(wkt_parse, wkt1_krovak_north_oriented) {
 
 // ---------------------------------------------------------------------------
 
+TEST(wkt_parse, wkt1_polar_stereographic_latitude_of_origin_70) {
+    auto wkt = "PROJCS[\"unknown\",\n"
+               "    GEOGCS[\"unknown\",\n"
+               "        DATUM[\"WGS_1984\",\n"
+               "            SPHEROID[\"WGS 84\",6378137,298.257223563,\n"
+               "                AUTHORITY[\"EPSG\",\"7030\"]],\n"
+               "            AUTHORITY[\"EPSG\",\"6326\"]],\n"
+               "        PRIMEM[\"Greenwich\",0,\n"
+               "            AUTHORITY[\"EPSG\",\"8901\"]],\n"
+               "        UNIT[\"degree\",0.0174532925199433,\n"
+               "            AUTHORITY[\"EPSG\",\"9122\"]]],\n"
+               "    PROJECTION[\"Polar_Stereographic\"],\n"
+               "    PARAMETER[\"latitude_of_origin\",70],\n"
+               "    PARAMETER[\"central_meridian\",2],\n"
+               "    PARAMETER[\"false_easting\",3],\n"
+               "    PARAMETER[\"false_northing\",4],\n"
+               "    UNIT[\"metre\",1,\n"
+               "        AUTHORITY[\"EPSG\",\"9001\"]]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    auto projString = crs->exportToPROJString(
+        PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+            .get());
+    auto expectedPROJString = "+proj=stere +lat_0=90 +lat_ts=70 +lon_0=2 "
+                              "+x_0=3 +y_0=4 +datum=WGS84 +units=m +no_defs";
+    EXPECT_EQ(projString, expectedPROJString);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(wkt_parse, wkt1_polar_stereographic_latitude_of_origin_90) {
+    auto wkt = "PROJCS[\"unknown\",\n"
+               "    GEOGCS[\"unknown\",\n"
+               "        DATUM[\"WGS_1984\",\n"
+               "            SPHEROID[\"WGS 84\",6378137,298.257223563,\n"
+               "                AUTHORITY[\"EPSG\",\"7030\"]],\n"
+               "            AUTHORITY[\"EPSG\",\"6326\"]],\n"
+               "        PRIMEM[\"Greenwich\",0,\n"
+               "            AUTHORITY[\"EPSG\",\"8901\"]],\n"
+               "        UNIT[\"degree\",0.0174532925199433,\n"
+               "            AUTHORITY[\"EPSG\",\"9122\"]]],\n"
+               "    PROJECTION[\"Polar_Stereographic\"],\n"
+               "    PARAMETER[\"latitude_of_origin\",90],\n"
+               "    PARAMETER[\"central_meridian\",2],\n"
+               "    PARAMETER[\"false_easting\",3],\n"
+               "    PARAMETER[\"false_northing\",4],\n"
+               "    UNIT[\"metre\",1,\n"
+               "        AUTHORITY[\"EPSG\",\"9001\"]]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    auto projString = crs->exportToPROJString(
+        PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+            .get());
+    auto expectedPROJString = "+proj=stere +lat_0=90 +lat_ts=90 +lon_0=2 "
+                              "+x_0=3 +y_0=4 +datum=WGS84 +units=m +no_defs";
+    EXPECT_EQ(projString, expectedPROJString);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(wkt_parse, wkt1_polar_stereographic_latitude_of_origin_90_scale_factor_1) {
+    auto wkt = "PROJCS[\"unknown\",\n"
+               "    GEOGCS[\"unknown\",\n"
+               "        DATUM[\"WGS_1984\",\n"
+               "            SPHEROID[\"WGS 84\",6378137,298.257223563,\n"
+               "                AUTHORITY[\"EPSG\",\"7030\"]],\n"
+               "            AUTHORITY[\"EPSG\",\"6326\"]],\n"
+               "        PRIMEM[\"Greenwich\",0,\n"
+               "            AUTHORITY[\"EPSG\",\"8901\"]],\n"
+               "        UNIT[\"degree\",0.0174532925199433,\n"
+               "            AUTHORITY[\"EPSG\",\"9122\"]]],\n"
+               "    PROJECTION[\"Polar_Stereographic\"],\n"
+               "    PARAMETER[\"latitude_of_origin\",90],\n"
+               "    PARAMETER[\"central_meridian\",2],\n"
+               "    PARAMETER[\"scale_factor\",1],\n"
+               "    PARAMETER[\"false_easting\",3],\n"
+               "    PARAMETER[\"false_northing\",4],\n"
+               "    UNIT[\"metre\",1,\n"
+               "        AUTHORITY[\"EPSG\",\"9001\"]]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    auto projString = crs->exportToPROJString(
+        PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+            .get());
+    auto expectedPROJString = "+proj=stere +lat_0=90 +lat_ts=90 +lon_0=2 "
+                              "+x_0=3 +y_0=4 +datum=WGS84 +units=m +no_defs";
+    EXPECT_EQ(projString, expectedPROJString);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(wkt_parse, wkt1_polar_stereographic_scale_factor) {
+    auto wkt = "PROJCS[\"unknown\",\n"
+               "    GEOGCS[\"unknown\",\n"
+               "        DATUM[\"WGS_1984\",\n"
+               "            SPHEROID[\"WGS 84\",6378137,298.257223563,\n"
+               "                AUTHORITY[\"EPSG\",\"7030\"]],\n"
+               "            AUTHORITY[\"EPSG\",\"6326\"]],\n"
+               "        PRIMEM[\"Greenwich\",0,\n"
+               "            AUTHORITY[\"EPSG\",\"8901\"]],\n"
+               "        UNIT[\"degree\",0.0174532925199433,\n"
+               "            AUTHORITY[\"EPSG\",\"9122\"]]],\n"
+               "    PROJECTION[\"Polar_Stereographic\"],\n"
+               "    PARAMETER[\"latitude_of_origin\",90],\n"
+               "    PARAMETER[\"central_meridian\",2],\n"
+               "    PARAMETER[\"scale_factor\",0.99],\n"
+               "    PARAMETER[\"false_easting\",3],\n"
+               "    PARAMETER[\"false_northing\",4],\n"
+               "    UNIT[\"metre\",1,\n"
+               "        AUTHORITY[\"EPSG\",\"9001\"]]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    auto projString = crs->exportToPROJString(
+        PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+            .get());
+    auto expectedPROJString = "+proj=stere +lat_0=90 +lon_0=2 +k=0.99 +x_0=3 "
+                              "+y_0=4 +datum=WGS84 +units=m +no_defs";
+    EXPECT_EQ(projString, expectedPROJString);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(wkt_parse, wkt2_projected) {
     auto wkt = "PROJCRS[\"WGS 84 / UTM zone 31N\",\n"
                "    BASEGEODCRS[\"WGS 84\",\n"
@@ -6177,6 +6311,39 @@ TEST(io, projparse_merc_stere_polar_variant_A) {
             "METHOD[\"Polar Stereographic (variant A)\",ID[\"EPSG\",9810]]") !=
         std::string::npos)
         << wkt;
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(io, projparse_merc_stere_polar_k_and_lat_ts) {
+    auto obj = PROJStringParser().createFromPROJString(
+        "+proj=stere +lat_0=90 +lat_ts=90 +k=1");
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    auto wkt = crs->exportToWKT(
+        &(WKTFormatter::create()->simulCurNodeHasId().setMultiLine(false)));
+    EXPECT_TRUE(
+        wkt.find(
+            "METHOD[\"Polar Stereographic (variant B)\",ID[\"EPSG\",9829]]") !=
+        std::string::npos)
+        << wkt;
+    EXPECT_TRUE(wkt.find("PARAMETER[\"Latitude of standard parallel\",90") !=
+                std::string::npos)
+        << wkt;
+    EXPECT_EQ(
+        crs->exportToPROJString(
+            PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+                .get()),
+        "+proj=stere +lat_0=90 +lat_ts=90 +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 "
+        "+units=m +no_defs");
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(io, projparse_merc_stere_polar_k_and_lat_ts_incompatible) {
+    EXPECT_THROW(PROJStringParser().createFromPROJString(
+                     "+proj=stere +lat_0=90 +lat_ts=70 +k=0.994"),
+                 ParsingException);
 }
 
 // ---------------------------------------------------------------------------

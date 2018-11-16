@@ -3081,6 +3081,16 @@ ConversionNNPtr WKTParser::Private::buildProjectionStandard(
         Measure falseEasting = mapParameters["false_easting"];
         Measure falseNorthing = mapParameters["false_northing"];
         if (latitudeOfOrigin.unit() != UnitOfMeasure::NONE &&
+            scaleFactor.getSIValue() == 1.0) {
+            return Conversion::createPolarStereographicVariantB(
+                PropertyMap().set(IdentifiedObject::NAME_KEY, "unnamed"),
+                Angle(latitudeOfOrigin.value(), latitudeOfOrigin.unit()),
+                Angle(centralMeridian.value(), centralMeridian.unit()),
+                Length(falseEasting.value(), falseEasting.unit()),
+                Length(falseNorthing.value(), falseNorthing.unit()));
+        }
+
+        if (latitudeOfOrigin.unit() != UnitOfMeasure::NONE &&
             std::fabs(std::fabs(latitudeOfOrigin.convertToUnit(
                           UnitOfMeasure::DEGREE)) -
                       90.0) < 1e-10) {
@@ -3091,15 +3101,8 @@ ConversionNNPtr WKTParser::Private::buildProjectionStandard(
                 Scale(scaleFactor.value(), scaleFactor.unit()),
                 Length(falseEasting.value(), falseEasting.unit()),
                 Length(falseNorthing.value(), falseNorthing.unit()));
-        } else if (latitudeOfOrigin.unit() != UnitOfMeasure::NONE &&
-                   scaleFactor.getSIValue() == 1.0) {
-            return Conversion::createPolarStereographicVariantB(
-                PropertyMap().set(IdentifiedObject::NAME_KEY, "unnamed"),
-                Angle(latitudeOfOrigin.value(), latitudeOfOrigin.unit()),
-                Angle(centralMeridian.value(), centralMeridian.unit()),
-                Length(falseEasting.value(), falseEasting.unit()),
-                Length(falseNorthing.value(), falseNorthing.unit()));
         }
+
         tryToIdentifyWKT1Method = false;
         // Import GDAL PROJ4 extension nodes
     } else if (extensionChildren.size() == 2 &&
@@ -5232,6 +5235,16 @@ struct PROJStringParser::Private {
     }
 
     // cppcheck-suppress functionStatic
+    const std::string &getParamValueK(const Step &step) {
+        for (const auto &pair : step.paramValues) {
+            if (ci_equal(pair.key, "k") || ci_equal(pair.key, "k_0")) {
+                return pair.value;
+            }
+        }
+        return emptyString;
+    }
+
+    // cppcheck-suppress functionStatic
     std::string guessBodyName(double a);
 
     PrimeMeridianNNPtr buildPrimeMeridian(const Step &step);
@@ -6073,13 +6086,11 @@ CRSNNPtr PROJStringParser::Private::buildProjectedCRS(
         const auto &lat_0 = getParamValue(step, "lat_0");
         const auto &lat_1 = getParamValue(step, "lat_1");
         const auto &lat_2 = getParamValue(step, "lat_2");
-        const auto &k_0 = getParamValue(step, "k_0");
-        const auto &k = getParamValue(step, "k");
+        const auto &k = getParamValueK(step);
         if (lat_2.empty() && !lat_0.empty() && !lat_1.empty() &&
             getAngularValue(lat_0) == getAngularValue(lat_1)) {
             mapping = getMapping(EPSG_CODE_METHOD_LAMBERT_CONIC_CONFORMAL_1SP);
-        } else if ((!k_0.empty() && getNumericValue(k_0) != 1.0) ||
-                   (!k.empty() && getNumericValue(k) != 1.0)) {
+        } else if (!k.empty() && getNumericValue(k) != 1.0) {
             mapping = getMapping(
                 EPSG_CODE_METHOD_LAMBERT_CONIC_CONFORMAL_2SP_MICHIGAN);
         } else {
@@ -6124,8 +6135,7 @@ CRSNNPtr PROJStringParser::Private::buildProjectedCRS(
             getParamValue(step, "a") == getParamValue(step, "b") &&
             (!hasParamValue(step, "lat_ts") ||
              getAngularValue(getParamValue(step, "lat_ts")) == 0.0) &&
-            (!hasParamValue(step, "k") ||
-             getNumericValue(getParamValue(step, "k")) == 1.0) &&
+            getNumericValue(getParamValueK(step)) == 1.0 &&
             getParamValue(step, "nadgrids") == "@null") {
             mapping = getMapping(
                 EPSG_CODE_METHOD_POPULAR_VISUALISATION_PSEUDO_MERCATOR);
@@ -6150,7 +6160,16 @@ CRSNNPtr PROJStringParser::Private::buildProjectedCRS(
             } else {
                 axisType = AxisType::SOUTH_POLE;
             }
-            if (hasParamValue(step, "lat_ts")) {
+            const auto &lat_ts = getParamValue(step, "lat_ts");
+            const auto &k = getParamValueK(step);
+            if (!lat_ts.empty() &&
+                std::fabs(getAngularValue(lat_ts) - lat_0) > 1e-10 &&
+                !k.empty() && std::fabs(getNumericValue(k) - 1) > 1e-10) {
+                throw ParsingException("lat_ts != lat_0 and k != 1 not "
+                                       "supported for Polar Stereographic");
+            }
+            if (!lat_ts.empty() &&
+                (k.empty() || std::fabs(getNumericValue(k) - 1) < 1e-10)) {
                 mapping =
                     getMapping(EPSG_CODE_METHOD_POLAR_STEREOGRAPHIC_VARIANT_B);
             } else {
@@ -6220,14 +6239,10 @@ CRSNNPtr PROJStringParser::Private::buildProjectedCRS(
             const auto *param = mapping->params[i];
             std::string proj_name(param->proj_name ? param->proj_name : "");
             const std::string *paramValue =
-                !proj_name.empty() ? &getParamValue(step, proj_name)
-                                   : &emptyString;
-            // k and k_0 may be used indifferently
-            if (paramValue->empty() && proj_name == "k") {
-                paramValue = &getParamValue(step, "k_0");
-            } else if (paramValue->empty() && proj_name == "k_0") {
-                paramValue = &getParamValue(step, "k");
-            }
+                (proj_name == "k" || proj_name == "k_0")
+                    ? &getParamValueK(step)
+                    : !proj_name.empty() ? &getParamValue(step, proj_name)
+                                         : &emptyString;
             double value = 0;
             if (!paramValue->empty()) {
                 bool hasError = false;
