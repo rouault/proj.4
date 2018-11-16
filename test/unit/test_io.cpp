@@ -5579,6 +5579,58 @@ TEST(io, projparse_longlat_a_rf) {
 
 // ---------------------------------------------------------------------------
 
+TEST(io, projparse_longlat_a_f_zero) {
+    auto obj =
+        PROJStringParser().createFromPROJString("+proj=longlat +a=2 +f=0");
+    auto crs = nn_dynamic_pointer_cast<GeographicCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    WKTFormatterNNPtr f(WKTFormatter::create());
+    f->simulCurNodeHasId();
+    crs->exportToWKT(f.get());
+    auto expected = "GEODCRS[\"unknown\",\n"
+                    "    DATUM[\"unknown\",\n"
+                    "        ELLIPSOID[\"unknown\",2,0,\n"
+                    "            LENGTHUNIT[\"metre\",1]]],\n"
+                    "    PRIMEM[\"Reference meridian\",0,\n"
+                    "        ANGLEUNIT[\"degree\",0.0174532925199433]],\n"
+                    "    CS[ellipsoidal,2],\n"
+                    "        AXIS[\"longitude\",east,\n"
+                    "            ORDER[1],\n"
+                    "            ANGLEUNIT[\"degree\",0.0174532925199433]],\n"
+                    "        AXIS[\"latitude\",north,\n"
+                    "            ORDER[2],\n"
+                    "            ANGLEUNIT[\"degree\",0.0174532925199433]]]";
+    EXPECT_EQ(f->toString(), expected);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(io, projparse_longlat_a_f_non_zero) {
+    auto obj =
+        PROJStringParser().createFromPROJString("+proj=longlat +a=2 +f=0.5");
+    auto crs = nn_dynamic_pointer_cast<GeographicCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+    WKTFormatterNNPtr f(WKTFormatter::create());
+    f->simulCurNodeHasId();
+    crs->exportToWKT(f.get());
+    auto expected = "GEODCRS[\"unknown\",\n"
+                    "    DATUM[\"unknown\",\n"
+                    "        ELLIPSOID[\"unknown\",2,2,\n"
+                    "            LENGTHUNIT[\"metre\",1]]],\n"
+                    "    PRIMEM[\"Reference meridian\",0,\n"
+                    "        ANGLEUNIT[\"degree\",0.0174532925199433]],\n"
+                    "    CS[ellipsoidal,2],\n"
+                    "        AXIS[\"longitude\",east,\n"
+                    "            ORDER[1],\n"
+                    "            ANGLEUNIT[\"degree\",0.0174532925199433]],\n"
+                    "        AXIS[\"latitude\",north,\n"
+                    "            ORDER[2],\n"
+                    "            ANGLEUNIT[\"degree\",0.0174532925199433]]]";
+    EXPECT_EQ(f->toString(), expected);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(io, projparse_longlat_R) {
     auto obj = PROJStringParser().createFromPROJString("+proj=longlat +R=2");
     auto crs = nn_dynamic_pointer_cast<GeographicCRS>(obj);
@@ -7388,6 +7440,10 @@ TEST(io, projparse_longlat_errors) {
                      "+proj=longlat +a=1 +rf=invalid"),
                  ParsingException);
 
+    EXPECT_THROW(PROJStringParser().createFromPROJString(
+                     "+proj=longlat +a=1 +f=invalid"),
+                 ParsingException);
+
     EXPECT_THROW(
         PROJStringParser().createFromPROJString("+proj=longlat +R=invalid"),
         ParsingException);
@@ -7399,6 +7455,9 @@ TEST(io, projparse_longlat_errors) {
                  ParsingException);
 
     EXPECT_THROW(PROJStringParser().createFromPROJString("+proj=longlat +rf=1"),
+                 ParsingException);
+
+    EXPECT_THROW(PROJStringParser().createFromPROJString("+proj=longlat +f=0"),
                  ParsingException);
 
     EXPECT_THROW(

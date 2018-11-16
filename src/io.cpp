@@ -5595,6 +5595,7 @@ PROJStringParser::Private::buildDatum(const Step &step,
     const auto &aStr = getParamValue(step, "a");
     const auto &bStr = getParamValue(step, "b");
     const auto &rfStr = getParamValue(step, "rf");
+    const auto &fStr = getParamValue(step, "f");
     const auto &RStr = getParamValue(step, "R");
     const util::optional<std::string> optionalEmptyString{};
 
@@ -5733,6 +5734,29 @@ PROJStringParser::Private::buildDatum(const Step &step,
             ellipsoid, optionalEmptyString, fixupPrimeMeridan(ellipsoid, pm));
     }
 
+    else if (!aStr.empty() && !fStr.empty()) {
+        double a;
+        try {
+            a = c_locale_stod(aStr);
+        } catch (const std::invalid_argument &) {
+            throw ParsingException("Invalid a value");
+        }
+        double f;
+        try {
+            f = c_locale_stod(fStr);
+        } catch (const std::invalid_argument &) {
+            throw ParsingException("Invalid f value");
+        }
+        auto ellipsoid = Ellipsoid::createFlattenedSphere(
+                             createMapWithUnknownName(), Length(a),
+                             Scale(f != 0.0 ? 1.0 / f : 0.0), guessBodyName(a))
+                             ->identify();
+        return GeodeticReferenceFrame::create(
+            grfMap.set(IdentifiedObject::NAME_KEY,
+                       title.empty() ? "unknown" : title.c_str()),
+            ellipsoid, optionalEmptyString, fixupPrimeMeridan(ellipsoid, pm));
+    }
+
     else if (!RStr.empty()) {
         double R;
         try {
@@ -5749,7 +5773,7 @@ PROJStringParser::Private::buildDatum(const Step &step,
     }
 
     if (!aStr.empty() && bStr.empty() && rfStr.empty()) {
-        throw ParsingException("a found, but b or rf missing");
+        throw ParsingException("a found, but b, f or rf missing");
     }
 
     if (!bStr.empty() && aStr.empty()) {
@@ -5758,6 +5782,10 @@ PROJStringParser::Private::buildDatum(const Step &step,
 
     if (!rfStr.empty() && aStr.empty()) {
         throw ParsingException("rf found, but a missing");
+    }
+
+    if (!fStr.empty() && aStr.empty()) {
+        throw ParsingException("f found, but a missing");
     }
 
     if (pm->_isEquivalentTo(PrimeMeridian::GREENWICH.get())) {
@@ -6450,7 +6478,7 @@ CRSNNPtr PROJStringParser::Private::buildProjectedCRS(
 
 static bool isDatumDefiningParam(const std::string &param) {
     return (param == "datum" || param == "ellps" || param == "a" ||
-            param == "b" || param == "rf" || param == "R");
+            param == "b" || param == "rf" || param == "f" || param == "R");
 }
 
 // ---------------------------------------------------------------------------
