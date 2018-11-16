@@ -692,6 +692,7 @@ struct OperationMethod::Private {
     util::optional<std::string> formula_{};
     util::optional<metadata::Citation> formulaCitation_{};
     std::vector<GeneralOperationParameterNNPtr> parameters_{};
+    std::string projMethodOverride_{};
 };
 //! @endcond
 
@@ -769,6 +770,7 @@ OperationMethodNNPtr OperationMethod::create(
     method->assignSelf(method);
     method->setProperties(properties);
     method->d->parameters_ = parameters;
+    properties.getStringValue("proj_method", method->d->projMethodOverride_);
     return method;
 }
 
@@ -4904,11 +4906,25 @@ createPROJExtensionFromCustomProj(const Conversion *conv,
 void Conversion::addWKTExtensionNode(io::WKTFormatter *formatter) const {
     const bool isWKT2 = formatter->version() == io::WKTFormatter::Version::WKT2;
     if (!isWKT2) {
-        const auto &methodName = method()->nameStr();
-        const int methodEPSGCode = method()->getEPSGCode();
-        if (methodEPSGCode ==
-                EPSG_CODE_METHOD_POPULAR_VISUALISATION_PSEUDO_MERCATOR ||
-            nameStr() == "Popular Visualisation Mercator") {
+        const auto &l_method = method();
+        const auto &methodName = l_method->nameStr();
+        const int methodEPSGCode = l_method->getEPSGCode();
+        int zone = 0;
+        bool north = true;
+        if (l_method->getPrivate()->projMethodOverride_ == "etmerc" &&
+            !isUTM(zone, north)) {
+            auto projFormatter = io::PROJStringFormatter::create(
+                io::PROJStringFormatter::Convention::PROJ_4);
+            projFormatter->setUseETMercForTMerc(true);
+            formatter->startNode(io::WKTConstants::EXTENSION, false);
+            formatter->addQuotedString("PROJ4");
+            _exportToPROJString(projFormatter.get());
+            projFormatter->addParam("no_defs");
+            formatter->addQuotedString(projFormatter->toString());
+            formatter->endNode();
+        } else if (methodEPSGCode ==
+                       EPSG_CODE_METHOD_POPULAR_VISUALISATION_PSEUDO_MERCATOR ||
+                   nameStr() == "Popular Visualisation Mercator") {
 
             auto projFormatter = io::PROJStringFormatter::create(
                 io::PROJStringFormatter::Convention::PROJ_4);
@@ -4983,15 +4999,16 @@ void Conversion::_exportToPROJString(
         // Check for UTM
         int zone = 0;
         bool north = true;
-        if (isUTM(zone, north)) {
+        bool etMercSettingSet = false;
+        useETMerc = formatter->getUseETMercForTMerc(etMercSettingSet) ||
+                    l_method->getPrivate()->projMethodOverride_ == "etmerc";
+        if (isUTM(zone, north) && !(etMercSettingSet && !useETMerc)) {
             bConversionDone = true;
             formatter->addStep("utm");
             formatter->addParam("zone", zone);
             if (!north) {
                 formatter->addParam("south");
             }
-        } else {
-            useETMerc = formatter->getUseETMercForTMerc();
         }
     } else if (methodEPSGCode ==
                EPSG_CODE_METHOD_HOTINE_OBLIQUE_MERCATOR_VARIANT_A) {

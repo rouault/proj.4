@@ -4341,6 +4341,7 @@ struct PROJStringFormatter::Private {
     bool omitZUnitConversion_ = false;
     DatabaseContextPtr dbContext_{};
     bool useETMercForTMerc_ = false;
+    bool useETMercForTMercSet_ = false;
 
     std::string result_{};
 
@@ -4396,6 +4397,7 @@ PROJStringFormatter::create(Convention conventionIn,
  * instead of tmerc */
 void PROJStringFormatter::setUseETMercForTMerc(bool flag) {
     d->useETMercForTMerc_ = flag;
+    d->useETMercForTMercSet_ = true;
 }
 
 // ---------------------------------------------------------------------------
@@ -4818,7 +4820,8 @@ PROJStringFormatter::Convention PROJStringFormatter::convention() const {
 
 // ---------------------------------------------------------------------------
 
-bool PROJStringFormatter::getUseETMercForTMerc() const {
+bool PROJStringFormatter::getUseETMercForTMerc(bool &settingSetOut) const {
+    settingSetOut = d->useETMercForTMercSet_;
     return d->useETMercForTMerc_;
 }
 
@@ -6081,8 +6084,6 @@ CRSNNPtr PROJStringParser::Private::buildProjectedCRS(
             getMapping(EPSG_CODE_METHOD_TRANSVERSE_MERCATOR_SOUTH_ORIENTATED);
     } else if (step.name == "etmerc") {
         mapping = getMapping(EPSG_CODE_METHOD_TRANSVERSE_MERCATOR);
-        // TODO: we loose the link to the proj etmerc method here. Add some
-        // property to Conversion to keep it ?
     } else if (step.name == "lcc") {
         const auto &lat_0 = getParamValue(step, "lat_0");
         const auto &lat_1 = getParamValue(step, "lat_1");
@@ -6306,6 +6307,10 @@ CRSNNPtr PROJStringParser::Private::buildProjectedCRS(
                           : param->unit_type == UnitOfMeasure::Type::SCALE
                                 ? UnitOfMeasure::SCALE_UNITY
                                 : UnitOfMeasure::NONE)));
+        }
+
+        if (step.name == "etmerc") {
+            methodMap.set("proj_method", "etmerc");
         }
 
         conv = Conversion::create(mapWithUnknownName, methodMap, parameters,

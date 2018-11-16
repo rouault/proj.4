@@ -6261,14 +6261,26 @@ TEST(io, projparse_etmerc) {
     auto obj = PROJStringParser().createFromPROJString("+proj=etmerc");
     auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
     ASSERT_TRUE(crs != nullptr);
-    WKTFormatterNNPtr f(WKTFormatter::create());
-    f->simulCurNodeHasId();
-    f->setMultiLine(false);
-    crs->exportToWKT(f.get());
-    auto wkt = f->toString();
-    EXPECT_TRUE(wkt.find("METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]]") !=
-                std::string::npos)
-        << wkt;
+    auto wkt2 = crs->exportToWKT(
+        &WKTFormatter::create()->simulCurNodeHasId().setMultiLine(false));
+    EXPECT_TRUE(
+        wkt2.find("METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]]") !=
+        std::string::npos)
+        << wkt2;
+
+    EXPECT_EQ(
+        crs->exportToPROJString(
+            PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
+                .get()),
+        "+proj=etmerc +lat_0=0 +lon_0=0 +k_0=1 +x_0=0 +y_0=0 "
+        "+datum=WGS84 +units=m +no_defs");
+
+    auto wkt1 = crs->exportToWKT(
+        WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL).get());
+    EXPECT_TRUE(wkt1.find("EXTENSION[\"PROJ4\",\"+proj=etmerc +lat_0=0 "
+                          "+lon_0=0 +k_0=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m "
+                          "+no_defs\"]") != std::string::npos)
+        << wkt1;
 }
 
 // ---------------------------------------------------------------------------

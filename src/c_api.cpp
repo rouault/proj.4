@@ -925,7 +925,8 @@ const char *proj_obj_as_wkt(PJ_OBJ *obj, PJ_WKT_TYPE type,
  * @param options NULL-terminated list of strings with "KEY=VALUE" format. or
  * NULL.
  * The currently recognized option is USE_ETMERC=YES to use
- * +proj=etmerc instead of +proj=tmerc
+ * +proj=etmerc instead of +proj=tmerc (or USE_ETMERC=NO to disable implicit
+ * use of etmerc by utm conversions)
  * @return a string, or NULL in case of error.
  */
 const char *proj_obj_as_proj_string(PJ_OBJ *obj, PJ_PROJ_STRING_TYPE type,
@@ -960,6 +961,8 @@ const char *proj_obj_as_proj_string(PJ_OBJ *obj, PJ_PROJ_STRING_TYPE type,
         if (options != nullptr && options[0] != nullptr) {
             if (ci_equal(options[0], "USE_ETMERC=YES")) {
                 formatter->setUseETMercForTMerc(true);
+            } else if (ci_equal(options[0], "USE_ETMERC=NO")) {
+                formatter->setUseETMercForTMerc(false);
             }
         }
         obj->lastPROJString = exportable->exportToPROJString(formatter.get());

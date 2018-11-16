@@ -327,7 +327,7 @@ TEST_F(CApi, proj_obj_as_proj_string_incompatible_WKT1) {
 
 // ---------------------------------------------------------------------------
 
-TEST_F(CApi, proj_obj_as_proj_string_etmerc_option) {
+TEST_F(CApi, proj_obj_as_proj_string_etmerc_option_yes) {
     auto obj = proj_obj_create_from_proj_string(m_ctxt, "+proj=tmerc", nullptr);
     ObjectKeeper keeper(obj);
     ASSERT_NE(obj, nullptr);
@@ -337,6 +337,22 @@ TEST_F(CApi, proj_obj_as_proj_string_etmerc_option) {
     ASSERT_NE(str, nullptr);
     EXPECT_EQ(str, std::string("+proj=etmerc +lat_0=0 +lon_0=0 +k_0=1 +x_0=0 "
                                "+y_0=0 +datum=WGS84 +units=m +no_defs"));
+}
+
+// ---------------------------------------------------------------------------
+
+TEST_F(CApi, proj_obj_as_proj_string_etmerc_option_no) {
+    auto obj =
+        proj_obj_create_from_proj_string(m_ctxt, "+proj=utm +zone=31", nullptr);
+    ObjectKeeper keeper(obj);
+    ASSERT_NE(obj, nullptr);
+
+    const char *options[] = {"USE_ETMERC=NO", nullptr};
+    auto str = proj_obj_as_proj_string(obj, PJ_PROJ_4, options);
+    ASSERT_NE(str, nullptr);
+    EXPECT_EQ(str, std::string("+proj=tmerc +lat_0=0 +lon_0=3 +k_0=0.9996 "
+                               "+x_0=500000 +y_0=0 +datum=WGS84 +units=m "
+                               "+no_defs"));
 }
 
 // ---------------------------------------------------------------------------

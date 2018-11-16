@@ -352,7 +352,7 @@ class PROJ_GCC_DLL PROJStringFormatter {
         startInversion();
     PROJ_DLL void stopInversion();
     PROJ_INTERNAL bool isInverted() const;
-    PROJ_INTERNAL bool getUseETMercForTMerc() const;
+    PROJ_INTERNAL bool getUseETMercForTMerc(bool &settingSetOut) const;
 
     PROJ_DLL void
     ingestPROJString(const std::string &str); // throw ParsingException
