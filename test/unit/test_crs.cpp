@@ -829,14 +829,14 @@ TEST(crs, EPSG_2222_projected_unit_foot_as_PROJ_string_and_WKT1) {
     EXPECT_EQ(crs->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
               "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=tmerc "
-              "+lat_0=31 +lon_0=-110.166666666667 +k_0=0.9999 +x_0=213360 "
+              "+lat_0=31 +lon_0=-110.166666666667 +k=0.9999 +x_0=213360 "
               "+y_0=0 +ellps=GRS80 +step +proj=unitconvert +xy_in=m +z_in=m "
               "+xy_out=ft +z_out=ft");
     EXPECT_EQ(
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=tmerc +lat_0=31 +lon_0=-110.166666666667 +k_0=0.9999 "
+        "+proj=tmerc +lat_0=31 +lon_0=-110.166666666667 +k=0.9999 "
         "+x_0=213360 +y_0=0 +datum=NAD83 +units=ft +no_defs");
 
     auto wkt1 = crs->exportToWKT(

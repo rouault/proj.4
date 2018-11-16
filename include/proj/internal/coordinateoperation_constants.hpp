@@ -88,6 +88,11 @@ static const ParamMapping paramScaleFactor = {
     EPSG_CODE_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN, WKT1_SCALE_FACTOR,
     common::UnitOfMeasure::Type::SCALE, k_0};
 
+static const ParamMapping paramScaleFactorK = {
+    EPSG_NAME_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN,
+    EPSG_CODE_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN, WKT1_SCALE_FACTOR,
+    common::UnitOfMeasure::Type::SCALE, k};
+
 static const ParamMapping paramFalseEasting = {
     EPSG_NAME_PARAMETER_FALSE_EASTING, EPSG_CODE_PARAMETER_FALSE_EASTING,
     WKT1_FALSE_EASTING, common::UnitOfMeasure::Type::LINEAR, x_0};
@@ -128,6 +133,10 @@ static const ParamMapping paramLatitude2ndStdParallel = {
 
 static const ParamMapping *const paramsNatOriginScale[] = {
     &paramLatitudeNatOrigin, &paramLongitudeNatOrigin, &paramScaleFactor,
+    &paramFalseEasting,      &paramFalseNorthing,      nullptr};
+
+static const ParamMapping *const paramsNatOriginScaleK[] = {
+    &paramLatitudeNatOrigin, &paramLongitudeNatOrigin, &paramScaleFactorK,
     &paramFalseEasting,      &paramFalseNorthing,      nullptr};
 
 static const ParamMapping paramLatFirstPoint = {
@@ -392,11 +401,6 @@ static const ParamMapping paramLatMerc1SP = {
     common::UnitOfMeasure::Type::ANGULAR,
     nullptr}; // always set to zero, not to be exported in PROJ strings
 
-static const ParamMapping paramScaleFactorK = {
-    EPSG_NAME_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN,
-    EPSG_CODE_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN, WKT1_SCALE_FACTOR,
-    common::UnitOfMeasure::Type::SCALE, k};
-
 static const ParamMapping *const paramsMerc1SP[] = {
     &paramLatMerc1SP,   &paramLongitudeNatOrigin, &paramScaleFactorK,
     &paramFalseEasting, &paramFalseNorthing,      nullptr};
@@ -491,12 +495,12 @@ static const ParamMapping *const paramsLabordeObliqueMercator[] = {
 
 static const MethodMapping methodMappings[] = {
     {EPSG_NAME_METHOD_TRANSVERSE_MERCATOR, EPSG_CODE_METHOD_TRANSVERSE_MERCATOR,
-     "Transverse_Mercator", "tmerc", nullptr, paramsNatOriginScale},
+     "Transverse_Mercator", "tmerc", nullptr, paramsNatOriginScaleK},
 
     {EPSG_NAME_METHOD_TRANSVERSE_MERCATOR_SOUTH_ORIENTATED,
      EPSG_CODE_METHOD_TRANSVERSE_MERCATOR_SOUTH_ORIENTATED,
      "Transverse_Mercator_South_Orientated", "tmerc", "axis=wsu",
-     paramsNatOriginScale},
+     paramsNatOriginScaleK},
 
     {PROJ_WKT2_NAME_METHOD_TWO_POINT_EQUIDISTANT, 0, "Two_Point_Equidistant",
      "tpeqd", nullptr, paramsTPEQD},

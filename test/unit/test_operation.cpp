@@ -1185,13 +1185,13 @@ TEST(operation, tmerc_export) {
     auto conv = Conversion::createTransverseMercator(
         PropertyMap(), Angle(1), Angle(2), Scale(3), Length(4), Length(5));
     EXPECT_EQ(conv->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=tmerc +lat_0=1 +lon_0=2 +k_0=3 +x_0=4 +y_0=5");
+              "+proj=tmerc +lat_0=1 +lon_0=2 +k=3 +x_0=4 +y_0=5");
 
     {
         auto formatter = PROJStringFormatter::create();
         formatter->setUseETMercForTMerc(true);
         EXPECT_EQ(conv->exportToPROJString(formatter.get()),
-                  "+proj=etmerc +lat_0=1 +lon_0=2 +k_0=3 +x_0=4 +y_0=5");
+                  "+proj=etmerc +lat_0=1 +lon_0=2 +k=3 +x_0=4 +y_0=5");
     }
 
     EXPECT_EQ(conv->exportToWKT(WKTFormatter::create().get()),
@@ -1270,7 +1270,7 @@ TEST(operation, tmerc_south_oriented_export) {
         PropertyMap(), Angle(1), Angle(2), Scale(3), Length(4), Length(5));
 
     EXPECT_EQ(conv->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=tmerc +axis=wsu +lat_0=1 +lon_0=2 +k_0=3 +x_0=4 +y_0=5");
+              "+proj=tmerc +axis=wsu +lat_0=1 +lon_0=2 +k=3 +x_0=4 +y_0=5");
 
     EXPECT_EQ(conv->exportToWKT(WKTFormatter::create().get()),
               "CONVERSION[\"Transverse Mercator (South Orientated)\",\n"
@@ -1329,7 +1329,7 @@ TEST(operation, tmerc_south_oriented_export) {
     EXPECT_EQ(crs->exportToPROJString(PROJStringFormatter::create().get()),
               "+proj=pipeline +step +proj=axisswap +order=2,1 +step "
               "+proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=tmerc "
-              "+axis=wsu +lat_0=0 +lon_0=29 +k_0=1 +x_0=0 +y_0=0 +ellps=WGS84");
+              "+axis=wsu +lat_0=0 +lon_0=29 +k=1 +x_0=0 +y_0=0 +ellps=WGS84");
 }
 
 // ---------------------------------------------------------------------------
@@ -3830,7 +3830,7 @@ TEST(operation, conversion_inverse) {
               "        ID[\"EPSG\",8807]]]");
 
     EXPECT_EQ(inv->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=pipeline +step +inv +proj=tmerc +lat_0=1 +lon_0=2 +k_0=3 "
+              "+proj=pipeline +step +inv +proj=tmerc +lat_0=1 +lon_0=2 +k=3 "
               "+x_0=4 +y_0=5");
 
     EXPECT_TRUE(inv->isEquivalentTo(inv.get()));
@@ -5563,7 +5563,7 @@ TEST(operation, compoundCRS_to_compoundCRS_with_vertical_transform) {
                                                                     compound2);
     ASSERT_TRUE(op != nullptr);
     EXPECT_EQ(op->exportToPROJString(PROJStringFormatter::create().get()),
-              "+proj=pipeline +step +inv +proj=tmerc +lat_0=1 +lon_0=2 +k_0=3 "
+              "+proj=pipeline +step +inv +proj=tmerc +lat_0=1 +lon_0=2 +k=3 "
               "+x_0=4 +y_0=5 +ellps=WGS84 +step "
               "+proj=vgridshift +grids=bla.gtx +multiplier=0.001 +step "
               "+proj=utm +zone=32 "
@@ -5573,7 +5573,7 @@ TEST(operation, compoundCRS_to_compoundCRS_with_vertical_transform) {
         formatter->setUseETMercForTMerc(true);
         EXPECT_EQ(op->exportToPROJString(formatter.get()),
                   "+proj=pipeline +step +inv +proj=etmerc +lat_0=1 +lon_0=2 "
-                  "+k_0=3 +x_0=4 +y_0=5 +ellps=WGS84 +step "
+                  "+k=3 +x_0=4 +y_0=5 +ellps=WGS84 +step "
                   "+proj=vgridshift +grids=bla.gtx +multiplier=0.001 +step "
                   "+proj=utm +zone=32 "
                   "+ellps=WGS84");
@@ -5585,7 +5585,7 @@ TEST(operation, compoundCRS_to_compoundCRS_with_vertical_transform) {
                   "+proj=pipeline +step +inv +proj=utm +zone=32 +ellps=WGS84 "
                   "+step +inv +proj=vgridshift +grids=bla.gtx "
                   "+multiplier=0.001 +step +proj=etmerc +lat_0=1 +lon_0=2 "
-                  "+k_0=3 +x_0=4 +y_0=5 +ellps=WGS84");
+                  "+k=3 +x_0=4 +y_0=5 +ellps=WGS84");
     }
 
     auto opInverse = CoordinateOperationFactory::create()->createOperation(

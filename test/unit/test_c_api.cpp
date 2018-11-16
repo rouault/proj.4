@@ -351,7 +351,7 @@ TEST_F(CApi, proj_obj_as_proj_string_etmerc_option_yes) {
     const char *options[] = {"USE_ETMERC=YES", nullptr};
     auto str = proj_obj_as_proj_string(obj, PJ_PROJ_4, options);
     ASSERT_NE(str, nullptr);
-    EXPECT_EQ(str, std::string("+proj=etmerc +lat_0=0 +lon_0=0 +k_0=1 +x_0=0 "
+    EXPECT_EQ(str, std::string("+proj=etmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 "
                                "+y_0=0 +datum=WGS84 +units=m +no_defs"));
 }
 
@@ -366,7 +366,7 @@ TEST_F(CApi, proj_obj_as_proj_string_etmerc_option_no) {
     const char *options[] = {"USE_ETMERC=NO", nullptr};
     auto str = proj_obj_as_proj_string(obj, PJ_PROJ_4, options);
     ASSERT_NE(str, nullptr);
-    EXPECT_EQ(str, std::string("+proj=tmerc +lat_0=0 +lon_0=3 +k_0=0.9996 "
+    EXPECT_EQ(str, std::string("+proj=tmerc +lat_0=0 +lon_0=3 +k=0.9996 "
                                "+x_0=500000 +y_0=0 +datum=WGS84 +units=m "
                                "+no_defs"));
 }

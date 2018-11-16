@@ -6430,13 +6430,13 @@ TEST(io, projparse_etmerc) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=etmerc +lat_0=0 +lon_0=0 +k_0=1 +x_0=0 +y_0=0 "
+        "+proj=etmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 "
         "+datum=WGS84 +units=m +no_defs");
 
     auto wkt1 = crs->exportToWKT(
         WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL).get());
     EXPECT_TRUE(wkt1.find("EXTENSION[\"PROJ4\",\"+proj=etmerc +lat_0=0 "
-                          "+lon_0=0 +k_0=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m "
+                          "+lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m "
                           "+no_defs\"]") != std::string::npos)
         << wkt1;
 }
