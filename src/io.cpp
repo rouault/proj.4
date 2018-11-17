@@ -2865,8 +2865,15 @@ ConversionNNPtr WKTParser::Private::buildProjectionFromESRI(
                                        defaultLinearUnit, defaultAngularUnit);
     }
 
+    struct ci_less_struct {
+        bool operator()(const std::string &lhs, const std::string &rhs) const
+            noexcept {
+            return ci_less(lhs, rhs);
+        }
+    };
+
     // Build a map of present parameters
-    std::map<std::string, std::string> mapParamNameToValue;
+    std::map<std::string, std::string, ci_less_struct> mapParamNameToValue;
     for (const auto &childNode : projCRSNode->GP()->children()) {
         if (ci_equal(childNode->GP()->value(), WKTConstants::PARAMETER)) {
             const auto &childNodeChildren = childNode->GP()->children();
@@ -2914,7 +2921,7 @@ ConversionNNPtr WKTParser::Private::buildProjectionFromESRI(
 
     const auto *wkt2_mapping = getMapping(esriMapping->wkt2_name);
     assert(wkt2_mapping);
-    if (esriProjectionName == "Stereographic") {
+    if (ci_equal(esriProjectionName, "Stereographic")) {
         try {
             if (std::fabs(io::asDouble(
                     mapParamNameToValue["Latitude_Of_Origin"])) == 90.0) {
@@ -2963,9 +2970,20 @@ ConversionNNPtr WKTParser::Private::buildProjectionFromESRI(
         if (iter == mapWKT2NameToESRIName.end()) {
             continue;
         }
-        auto iter2 = mapParamNameToValue.find(iter->second);
-        if (iter2 == mapParamNameToValue.end()) {
-            continue;
+        const auto &esriParamName = iter->second;
+        auto iter2 = mapParamNameToValue.find(esriParamName);
+        auto mapParamNameToValueEnd = mapParamNameToValue.end();
+        if (iter2 == mapParamNameToValueEnd) {
+            // In case we don't find a direct match, try the aliases
+            for (iter2 = mapParamNameToValue.begin();
+                 iter2 != mapParamNameToValueEnd; ++iter2) {
+                if (areEquivalentParameters(iter2->first, esriParamName)) {
+                    break;
+                }
+            }
+            if (iter2 == mapParamNameToValueEnd) {
+                continue;
+            }
         }
 
         PropertyMap propertiesParameter;

@@ -3782,6 +3782,56 @@ TEST(wkt_parse, esri_projcs) {
 
 // ---------------------------------------------------------------------------
 
+TEST(wkt_parse, wkt1_esri_case_insensitive_names) {
+    auto wkt = "PROJCS[\"WGS_1984_UTM_Zone_31N\",GEOGCS[\"GCS_WGS_1984\","
+               "DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137.0,"
+               "298.257223563]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\","
+               "0.0174532925199433]],PROJECTION[\"transverse_mercator\"],"
+               "PARAMETER[\"false_easting\",500000.0],"
+               "PARAMETER[\"false_northing\",0.0],"
+               "PARAMETER[\"central_meridian\",3.0],"
+               "PARAMETER[\"scale_factor\",0.9996],"
+               "PARAMETER[\"latitude_of_origin\",0.0],UNIT[\"Meter\",1.0]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    int zone = 0;
+    bool north = false;
+    EXPECT_TRUE(crs->derivingConversion()->isUTM(zone, north));
+    EXPECT_EQ(zone, 31);
+    EXPECT_TRUE(north);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(wkt_parse, wkt1_esri_non_expected_param_name) {
+    // We try to be lax on parameter names.
+    auto wkt =
+        "PROJCS[\"WGS_1984_UTM_Zone_31N\",GEOGCS[\"GCS_WGS_1984\","
+        "DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137.0,"
+        "298.257223563]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\","
+        "0.0174532925199433]],PROJECTION[\"transverse_mercator\"],"
+        "PARAMETER[\"false_easting\",500000.0],"
+        "PARAMETER[\"false_northing\",0.0],"
+        "PARAMETER[\"longitude_of_center\",3.0]," // should be Central_Meridian
+        "PARAMETER[\"scale_factor\",0.9996],"
+        "PARAMETER[\"latitude_of_origin\",0.0],UNIT[\"Meter\",1.0]]";
+
+    auto obj = WKTParser().createFromWKT(wkt);
+    auto crs = nn_dynamic_pointer_cast<ProjectedCRS>(obj);
+    ASSERT_TRUE(crs != nullptr);
+
+    int zone = 0;
+    bool north = false;
+    EXPECT_TRUE(crs->derivingConversion()->isUTM(zone, north));
+    EXPECT_EQ(zone, 31);
+    EXPECT_TRUE(north);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(wkt_parse, wkt1_esri_krovak_south_west) {
     auto wkt = "PROJCS[\"S-JTSK_Krovak\",GEOGCS[\"GCS_S_JTSK\","
                "DATUM[\"D_S_JTSK\","

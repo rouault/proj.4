@@ -143,13 +143,11 @@ static std::set<std::string> buildSetEquivalentParameters() {
 
     std::set<std::string> set;
 
-    const char *const listOfEquivalentParameterNames[][5] = {
+    const char *const listOfEquivalentParameterNames[][7] = {
         {"latitude_of_point_1", "Latitude_Of_1st_Point", nullptr},
         {"longitude_of_point_1", "Longitude_Of_1st_Point", nullptr},
         {"latitude_of_point_2", "Latitude_Of_2nd_Point", nullptr},
         {"longitude_of_point_2", "Longitude_Of_2nd_Point", nullptr},
-
-        {WKT1_LATITUDE_OF_ORIGIN, WKT1_LATITUDE_OF_CENTER, nullptr},
 
         {EPSG_NAME_PARAMETER_FALSE_EASTING,
          EPSG_NAME_PARAMETER_EASTING_FALSE_ORIGIN,
@@ -159,11 +157,13 @@ static std::set<std::string> buildSetEquivalentParameters() {
          EPSG_NAME_PARAMETER_NORTHING_FALSE_ORIGIN,
          EPSG_NAME_PARAMETER_NORTHING_PROJECTION_CENTRE, nullptr},
 
-        {EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN,
+        {WKT1_LATITUDE_OF_ORIGIN, WKT1_LATITUDE_OF_CENTER,
+         EPSG_NAME_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN,
          EPSG_NAME_PARAMETER_LATITUDE_FALSE_ORIGIN,
          EPSG_NAME_PARAMETER_LATITUDE_PROJECTION_CENTRE, nullptr},
 
-        {EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN,
+        {WKT1_CENTRAL_MERIDIAN, WKT1_LONGITUDE_OF_CENTER,
+         EPSG_NAME_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN,
          EPSG_NAME_PARAMETER_LONGITUDE_FALSE_ORIGIN,
          EPSG_NAME_PARAMETER_LONGITUDE_PROJECTION_CENTRE,
          EPSG_NAME_PARAMETER_LONGITUDE_OF_ORIGIN, nullptr},
@@ -181,8 +181,7 @@ static std::set<std::string> buildSetEquivalentParameters() {
     return set;
 }
 
-static bool areEquivalentParameters(const std::string &a,
-                                    const std::string &b) {
+bool areEquivalentParameters(const std::string &a, const std::string &b) {
 
     static const std::set<std::string> setEquivalentParameters =
         buildSetEquivalentParameters();
@@ -5341,12 +5340,15 @@ bool Conversion::isUTM(int &zone, bool &north) const {
                     const auto &measure = l_parameterValue->value();
                     if (epsg_code ==
                             EPSG_CODE_PARAMETER_LATITUDE_OF_NATURAL_ORIGIN &&
-                        measure.value() == UTM_LATITUDE_OF_NATURAL_ORIGIN) {
+                        std::fabs(measure.value() -
+                                  UTM_LATITUDE_OF_NATURAL_ORIGIN) < 1e-10) {
                         bLatitudeNatOriginUTM = true;
                     } else if (
                         epsg_code ==
                             EPSG_CODE_PARAMETER_LONGITUDE_OF_NATURAL_ORIGIN &&
-                        measure.unit() == common::UnitOfMeasure::DEGREE) {
+                        measure.unit()._isEquivalentTo(
+                            common::UnitOfMeasure::DEGREE,
+                            util::IComparable::Criterion::EQUIVALENT)) {
                         double dfZone = (measure.value() + 183.0) / 6.0;
                         if (dfZone > 0.9 && dfZone < 60.1 &&
                             std::abs(dfZone - std::round(dfZone)) < 1e-10) {
@@ -5355,20 +5357,29 @@ bool Conversion::isUTM(int &zone, bool &north) const {
                     } else if (
                         epsg_code ==
                             EPSG_CODE_PARAMETER_SCALE_FACTOR_AT_NATURAL_ORIGIN &&
-                        measure.value() == UTM_SCALE_FACTOR) {
+                        measure.unit()._isEquivalentTo(
+                            common::UnitOfMeasure::SCALE_UNITY,
+                            util::IComparable::Criterion::EQUIVALENT) &&
+                        std::fabs(measure.value() - UTM_SCALE_FACTOR) < 1e-10) {
                         bScaleFactorUTM = true;
                     } else if (epsg_code == EPSG_CODE_PARAMETER_FALSE_EASTING &&
                                measure.value() == UTM_FALSE_EASTING &&
-                               measure.unit() == common::UnitOfMeasure::METRE) {
+                               measure.unit()._isEquivalentTo(
+                                   common::UnitOfMeasure::METRE,
+                                   util::IComparable::Criterion::EQUIVALENT)) {
                         bFalseEastingUTM = true;
                     } else if (epsg_code ==
                                    EPSG_CODE_PARAMETER_FALSE_NORTHING &&
-                               measure.unit() == common::UnitOfMeasure::METRE) {
-                        if (measure.value() == UTM_NORTH_FALSE_NORTHING) {
+                               measure.unit()._isEquivalentTo(
+                                   common::UnitOfMeasure::METRE,
+                                   util::IComparable::Criterion::EQUIVALENT)) {
+                        if (std::fabs(measure.value() -
+                                      UTM_NORTH_FALSE_NORTHING) < 1e-10) {
                             bFalseNorthingUTM = true;
                             north = true;
-                        } else if (measure.value() ==
-                                   UTM_SOUTH_FALSE_NORTHING) {
+                        } else if (std::fabs(measure.value() -
+                                             UTM_SOUTH_FALSE_NORTHING) <
+                                   1e-10) {
                             bFalseNorthingUTM = true;
                             north = false;
                         }
