@@ -6977,7 +6977,7 @@ TEST(io, projparse_geocent_towgs84) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=geocent +ellps=WGS84 +towgs84=1,2,3,0,0,0,0 +no_defs");
+        "+proj=geocent +ellps=WGS84 +towgs84=1,2,3,0,0,0,0 +units=m +no_defs");
 }
 
 // ---------------------------------------------------------------------------

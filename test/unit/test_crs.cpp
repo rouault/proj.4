@@ -1120,7 +1120,7 @@ TEST(crs, geocentricCRS_as_PROJ_string) {
         crs->exportToPROJString(
             PROJStringFormatter::create(PROJStringFormatter::Convention::PROJ_4)
                 .get()),
-        "+proj=geocent +ellps=WGS84 +no_defs");
+        "+proj=geocent +datum=WGS84 +units=m +no_defs");
 }
 
 // ---------------------------------------------------------------------------
@@ -4621,7 +4621,8 @@ TEST(crs, crs_createBoundCRSToWGS84IfPossible) {
                           PROJStringFormatter::Convention::PROJ_4)
                           .get()),
                   "+proj=geocent +ellps=intl "
-                  "+towgs84=109.753,-528.133,-362.244,0,0,0,0 +no_defs");
+                  "+towgs84=109.753,-528.133,-362.244,0,0,0,0 +units=m "
+                  "+no_defs");
     }
 }
 

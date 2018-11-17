@@ -878,7 +878,8 @@ void GeodeticCRS::addGeocentricUnitConversionIntoPROJString(
 
     const auto &axisList = coordinateSystem()->axisList();
     const auto &unit = axisList[0]->unit();
-    if (unit != common::UnitOfMeasure::METRE) {
+    if (!unit._isEquivalentTo(common::UnitOfMeasure::METRE,
+                              util::IComparable::Criterion::EQUIVALENT)) {
         if (formatter->convention() ==
             io::PROJStringFormatter::Convention::PROJ_4) {
             io::FormattingException::Throw("GeodeticCRS::exportToPROJString(): "
@@ -901,6 +902,9 @@ void GeodeticCRS::addGeocentricUnitConversionIntoPROJString(
         const auto &toSI = unit.conversionToSI();
         formatter->addParam("xy_out", toSI);
         formatter->addParam("z_out", toSI);
+    } else if (formatter->convention() ==
+               io::PROJStringFormatter::Convention::PROJ_4) {
+        formatter->addParam("units", "m");
     }
 }
 //! @endcond
@@ -933,14 +937,7 @@ void GeodeticCRS::_exportToPROJString(
     } else {
         formatter->addStep("cart");
     }
-    ellipsoid()->_exportToPROJString(formatter);
-    if (formatter->convention() ==
-        io::PROJStringFormatter::Convention::PROJ_4) {
-        const auto &TOWGS84Params = formatter->getTOWGS84Parameters();
-        if (TOWGS84Params.size() == 7) {
-            formatter->addParam("towgs84", TOWGS84Params);
-        }
-    }
+    addDatumInfoToPROJString(formatter);
     addGeocentricUnitConversionIntoPROJString(formatter);
 }
 //! @endcond
@@ -2484,7 +2481,8 @@ void ProjectedCRS::addUnitConvertAndAxisSwap(io::PROJStringFormatter *formatter,
                                              bool axisSpecFound) const {
     const auto &axisList = d->coordinateSystem()->axisList();
     const auto &unit = axisList[0]->unit();
-    if (unit != common::UnitOfMeasure::METRE) {
+    if (!unit._isEquivalentTo(common::UnitOfMeasure::METRE,
+                              util::IComparable::Criterion::EQUIVALENT)) {
         auto projUnit = unit.exportToPROJString();
         const double toSI = unit.conversionToSI();
         if (formatter->convention() ==
