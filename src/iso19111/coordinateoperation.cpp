@@ -695,6 +695,7 @@ void CoordinateOperation::setWeakSourceTargetCRS(
 void CoordinateOperation::setCRSs(const crs::CRSNNPtr &sourceCRSIn,
                                   const crs::CRSNNPtr &targetCRSIn,
                                   const crs::CRSPtr &interpolationCRSIn) {
+    assert( !isImmutableFlagSet() );
     d->strongRef_ =
         internal::make_unique<Private::CRSStrongRef>(sourceCRSIn, targetCRSIn);
     d->sourceCRSWeak_ = sourceCRSIn.as_nullable();

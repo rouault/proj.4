@@ -346,6 +346,9 @@ class PROJ_GCC_DLL IdentifiedObject : public util::BaseObject,
     _isEquivalentTo(const IdentifiedObject *other,
                     util::IComparable::Criterion criterion =
                         util::IComparable::Criterion::STRICT) PROJ_PURE_DECL;
+
+    PROJ_INTERNAL bool isImmutableFlagSet() const;
+    PROJ_INTERNAL void setImmutableFlag();
     //! @endcond
 
   protected:

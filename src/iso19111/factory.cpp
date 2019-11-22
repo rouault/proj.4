@@ -356,6 +356,18 @@ bool DatabaseContext::Private::getCRSToCRSCoordOpFromCache(
 void DatabaseContext::Private::cache(
     const std::string &code,
     const std::vector<operation::CoordinateOperationNNPtr> &list) {
+    for( auto& op: list )
+    {
+        op->setImmutableFlag();
+        auto concatenated = dynamic_cast<operation::ConcatenatedOperation*>(op.get());
+        if( concatenated )
+        {
+            for( auto& step: concatenated->operations() )
+            {
+                step->setImmutableFlag();
+            }
+        }
+    }
     cacheCRSToCrsCoordOp_.insert(code, list);
 }
 

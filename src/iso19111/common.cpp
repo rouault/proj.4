@@ -588,6 +588,7 @@ struct IdentifiedObject::Private {
     std::vector<GenericNameNNPtr> aliases{};
     std::string remarks{};
     bool isDeprecated{};
+    bool immutableFlag = false;
 
     void setIdentifiers(const PropertyMap &properties);
     void setName(const PropertyMap &properties);
@@ -602,13 +603,17 @@ IdentifiedObject::IdentifiedObject() : d(internal::make_unique<Private>()) {}
 // ---------------------------------------------------------------------------
 
 IdentifiedObject::IdentifiedObject(const IdentifiedObject &other)
-    : d(internal::make_unique<Private>(*(other.d))) {}
+    : d(internal::make_unique<Private>(*(other.d))) { d->immutableFlag = false; }
 
 // ---------------------------------------------------------------------------
 
 //! @cond Doxygen_Suppress
 IdentifiedObject::~IdentifiedObject() = default;
 //! @endcond
+
+
+bool IdentifiedObject::isImmutableFlagSet() const { return d->immutableFlag; }
+void IdentifiedObject::setImmutableFlag() { d->immutableFlag = true; }
 
 // ---------------------------------------------------------------------------
 
