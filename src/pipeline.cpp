@@ -110,6 +110,7 @@ Thomas Knudsen, thokn@sdfe.dk, 2016-05-20
 PROJ_HEAD(pipeline,         "Transformation pipeline manager");
 PROJ_HEAD(pop, "Retrieve coordinate value from pipeline stack");
 PROJ_HEAD(push, "Save coordinate value on pipeline stack");
+PROJ_HEAD(bf, "Brainfuck");
 
 /* Projection specific elements for the PJ object */
 namespace { // anonymous namespace
@@ -132,19 +133,45 @@ struct Step {
     }
 };
 
-struct Pipeline {
-    char **argv = nullptr;
-    char **current_argv = nullptr;
-    std::vector<Step> steps{};
-    std::stack<double> stack[4];
-};
-
 struct PushPop {
     bool v1;
     bool v2;
     bool v3;
     bool v4;
 };
+
+enum class BfOperator
+{
+    WHILE,
+    END_WHILE,
+    DEC_ADDR,
+    INC_ADDR,
+    INCREMENT,
+    DECREMENT,
+    INPUT,
+    OUTPUT,
+};
+
+struct BrainfuckStep {
+    BfOperator op;
+    int idxAfterJump;
+    bool v1;
+    bool v2;
+    bool v3;
+    bool v4;
+    double multiplier;
+};
+
+struct Pipeline {
+    char **argv = nullptr;
+    char **current_argv = nullptr;
+    std::vector<Step> steps{};
+    std::stack<double> stack[4];
+    std::vector<unsigned long long> bfMemory{};
+    int nBFMemoryIdx = 0;
+    int iNextStep = 0;
+};
+
 } // anonymous namespace
 
 
@@ -165,8 +192,14 @@ static void pipeline_reassign_context( PJ* P, PJ_CONTEXT* ctx )
 
 static PJ_COORD pipeline_forward_4d (PJ_COORD point, PJ *P) {
     auto pipeline = static_cast<struct Pipeline*>(P->opaque);
-    for( auto& step: pipeline->steps )
+    pipeline->iNextStep = 0;
+    pipeline->nBFMemoryIdx = 0;
+    pipeline->bfMemory.clear();
+    pipeline->bfMemory.resize(30000);
+    while( pipeline->iNextStep < static_cast<int>(pipeline->steps.size()) )
     {
+        const auto& step = pipeline->steps[pipeline->iNextStep];
+        pipeline->iNextStep ++;
         if( !step.omit_fwd )
         {
             point = proj_trans (step.pj, PJ_FWD, point);
@@ -205,8 +238,14 @@ static PJ_XYZ pipeline_forward_3d (PJ_LPZ lpz, PJ *P) {
     PJ_COORD point = {{0,0,0,0}};
     point.lpz = lpz;
     auto pipeline = static_cast<struct Pipeline*>(P->opaque);
-    for( auto& step: pipeline->steps )
+    pipeline->iNextStep = 0;
+    pipeline->nBFMemoryIdx = 0;
+    pipeline->bfMemory.clear();
+    pipeline->bfMemory.resize(30000);
+    while( pipeline->iNextStep < static_cast<int>(pipeline->steps.size()) )
     {
+        const auto& step = pipeline->steps[pipeline->iNextStep];
+        pipeline->iNextStep ++;
         if( !step.omit_fwd )
         {
             point = pj_approx_3D_trans (step.pj, PJ_FWD, point);
@@ -247,8 +286,14 @@ static PJ_XY pipeline_forward (PJ_LP lp, PJ *P) {
     PJ_COORD point = {{0,0,0,0}};
     point.lp = lp;
     auto pipeline = static_cast<struct Pipeline*>(P->opaque);
-    for( auto& step: pipeline->steps )
+    pipeline->iNextStep = 0;
+    pipeline->nBFMemoryIdx = 0;
+    pipeline->bfMemory.clear();
+    pipeline->bfMemory.resize(30000);
+    while( pipeline->iNextStep < static_cast<int>(pipeline->steps.size()) )
     {
+        const auto& step = pipeline->steps[pipeline->iNextStep];
+        pipeline->iNextStep ++;
         if( !step.omit_fwd )
         {
             point = pj_approx_2D_trans (step.pj, PJ_FWD, point);
@@ -417,7 +462,7 @@ static enum pj_io_units get_next_non_whatever_unit(struct Pipeline* pipeline, si
     return PJ_IO_UNITS_WHATEVER;
 }
 
-
+static PJ_COORD bf_fwd_inv(PJ_COORD point, PJ *P);
 
 PJ *OPERATION(pipeline,0) {
     int i, nsteps = 0, argc;
@@ -591,6 +636,37 @@ PJ *OPERATION(pipeline,0) {
         }
     }
 
+    // Relate together start and end of while
+    std::stack<int> stackWhile;
+    for (i = 0; i < nsteps; i++) {
+        if( pipeline->steps[i].pj->fwd4d != bf_fwd_inv )
+        {
+            continue;
+        }
+
+        if( static_cast<struct BrainfuckStep*>(pipeline->steps[i].pj->opaque)->op == BfOperator::WHILE )
+        {
+            stackWhile.push(i);
+        }
+        else if( static_cast<struct BrainfuckStep*>(pipeline->steps[i].pj->opaque)->op == BfOperator::END_WHILE )
+        {
+            if( stackWhile.empty() )
+            {
+                proj_log_error (P, "Pipeline: Unbalanced bf +op=while and +op=eow" );
+                return destructor (P, PJD_ERR_MALFORMED_PIPELINE);
+            }
+            const int while_idx = stackWhile.top();
+            static_cast<struct BrainfuckStep*>(pipeline->steps[while_idx].pj->opaque)->idxAfterJump = i + 1;
+            static_cast<struct BrainfuckStep*>(pipeline->steps[i].pj->opaque)->idxAfterJump = while_idx + 1;
+            stackWhile.pop();
+        }
+    }
+    if( !stackWhile.empty() )
+    {
+        proj_log_error (P, "Pipeline: Unbalanced bf +op=while and +op=eow" );
+        return destructor (P, PJD_ERR_MALFORMED_PIPELINE);
+    }
+
     /* Check that units between each steps match each other, fail if they don't */
     for (i = 0; i + 1 < nsteps; i++) {
         enum pj_io_units curr_step_output = pj_right (pipeline->steps[i].pj);
@@ -703,4 +779,146 @@ PJ *OPERATION(pop, 0) {
     P->fwd4d = pop;
 
     return setup_pushpop(P);
+}
+
+static PJ_COORD bf_fwd_inv(PJ_COORD point, PJ *P) {
+    if (P->parent == nullptr)
+        return point;
+
+    struct Pipeline *pipeline = static_cast<struct Pipeline*>(P->parent->opaque);
+    struct BrainfuckStep *bfStep = static_cast<struct BrainfuckStep*>(P->opaque);
+
+    if( bfStep->op == BfOperator::WHILE )
+    {
+        if( pipeline->bfMemory[pipeline->nBFMemoryIdx] == 0 )
+        {
+            pipeline->iNextStep = bfStep->idxAfterJump;
+        }
+
+    }
+    else if( bfStep->op == BfOperator::END_WHILE )
+    {
+        if( pipeline->bfMemory[pipeline->nBFMemoryIdx] != 0 )
+        {
+            pipeline->iNextStep = bfStep->idxAfterJump;
+        }
+    }
+    else if( bfStep->op == BfOperator::INCREMENT )
+    {
+        ++ pipeline->bfMemory[pipeline->nBFMemoryIdx];
+        //fprintf(stderr, "mem[%d] = %f\n",
+        //        pipeline->nBFMemoryIdx, pipeline->bfMemory[pipeline->nBFMemoryIdx]);
+    }
+    else if( bfStep->op == BfOperator::DECREMENT )
+    {
+        -- pipeline->bfMemory[pipeline->nBFMemoryIdx];
+        //fprintf(stderr, "mem[%d] = %f\n",
+        //        pipeline->nBFMemoryIdx, pipeline->bfMemory[pipeline->nBFMemoryIdx]);
+    }
+    else if( bfStep->op == BfOperator::INC_ADDR )
+    {
+        if( pipeline->nBFMemoryIdx == static_cast<int>(pipeline->bfMemory.size() - 1) )
+        {
+            proj_log_error(P, "out of bounds of BF array");
+            return proj_coord_error();
+        }
+        ++ pipeline->nBFMemoryIdx;
+    }
+    else if( bfStep->op == BfOperator::DEC_ADDR )
+    {
+        if( pipeline->nBFMemoryIdx == 0 )
+        {
+            proj_log_error(P, "out of bounds of BF array");
+            return proj_coord_error();
+        }
+        -- pipeline->nBFMemoryIdx;
+    }
+    else if( bfStep->op == BfOperator::INPUT )
+    {
+        double v = 0;
+        if( bfStep->v1 )
+            v = point.xyzt.x;
+        else if( bfStep->v2 )
+            v = point.xyzt.y;
+        else if( bfStep->v3 )
+            v = point.xyzt.z;
+        else if( bfStep->v4 )
+            v = point.xyzt.t;
+        pipeline->bfMemory[pipeline->nBFMemoryIdx] =
+            static_cast<unsigned long long>(floor(v * bfStep->multiplier + 0.5));
+    }
+    else if( bfStep->op == BfOperator::OUTPUT )
+    {
+        double v = pipeline->bfMemory[pipeline->nBFMemoryIdx] *bfStep-> multiplier;
+        if( bfStep->v1 )
+            point.xyzt.x = v;
+        else if( bfStep->v2 )
+            point.xyzt.y = v;
+        else if( bfStep->v3 )
+            point.xyzt.z = v;
+        else if( bfStep->v4 )
+            point.xyzt.t = v;
+    }
+
+    return point;
+}
+
+PJ *OPERATION(bf, 0) {
+    P->fwd4d = bf_fwd_inv;
+    P->inv4d = bf_fwd_inv;
+
+    auto bfStep = static_cast<struct BrainfuckStep*>(pj_calloc (1, sizeof(struct BrainfuckStep)));
+    P->opaque = bfStep;
+    if (nullptr==P->opaque)
+        return pj_default_destructor(P, ENOMEM);
+
+    const char* op = pj_param (P->ctx, P->params, "sop").s;
+    if( !op ) {
+        return pj_default_destructor(P, PJD_ERR_MISSING_ARGS);
+    }
+    if( strcmp(op, "while") == 0 ) {
+        bfStep->op = BfOperator::WHILE;
+    }
+    else if( strcmp(op, "eow") == 0 ) {
+        bfStep->op = BfOperator::END_WHILE;
+    }
+    else if( strcmp(op, "inca") == 0 ) {
+        bfStep->op = BfOperator::INC_ADDR;
+    }
+    else if( strcmp(op, "deca") == 0 ) {
+        bfStep->op = BfOperator::DEC_ADDR;
+    }
+    else if( strcmp(op, "inc") == 0 ) {
+        bfStep->op = BfOperator::INCREMENT;
+    }
+    else if( strcmp(op, "dec") == 0 ) {
+        bfStep->op = BfOperator::DECREMENT;
+    }
+    else if( strcmp(op, "input") == 0 ) {
+        bfStep->op = BfOperator::INPUT;
+    }
+    else if( strcmp(op, "output") == 0 ) {
+        bfStep->op = BfOperator::OUTPUT;
+    }
+    else {
+        return pj_default_destructor(P, PJD_ERR_INVALID_ARG);
+    }
+    bfStep->idxAfterJump = -1;
+    if (pj_param_exists(P->params, "v_1"))
+        bfStep->v1 = true;
+    else if (pj_param_exists(P->params, "v_2"))
+        bfStep->v2 = true;
+    else if (pj_param_exists(P->params, "v_3"))
+        bfStep->v3 = true;
+    else if (pj_param_exists(P->params, "v_4"))
+        bfStep->v4 = true;
+    if (pj_param_exists(P->params, "multiplier"))
+        bfStep->multiplier = pj_param (P->ctx, P->params, "dmultiplier").f;
+    else
+        bfStep->multiplier = 1;
+
+    P->left  = PJ_IO_UNITS_WHATEVER;
+    P->right = PJ_IO_UNITS_WHATEVER;
+
+    return P;
 }
