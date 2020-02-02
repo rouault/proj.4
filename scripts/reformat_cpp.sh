@@ -16,7 +16,8 @@ esac
 TOPDIR="$SCRIPT_DIR/.."
 
 for i in "$TOPDIR"/include/proj/*.hpp "$TOPDIR"/include/proj/internal/*.hpp \
-         "$TOPDIR"/src/iso19111/*.cpp "$TOPDIR"/test/unit/*.cpp "$TOPDIR"/src/apps/projinfo.cpp \
+         "$TOPDIR"/src/iso19111/*.cpp "$TOPDIR"/test/unit/*.cpp \
+         "$TOPDIR"/src/apps/projinfo.cpp "$TOPDIR"/src/apps/proj_download_data.cpp \
          "$TOPDIR"/src/tracing.cpp "$TOPDIR"/src/grids.hpp "$TOPDIR"/src/grids.cpp \
          "$TOPDIR"/src/filemanager.hpp "$TOPDIR"/src/filemanager.cpp \
          "$TOPDIR"/src/sqlite3_utils.hpp "$TOPDIR"/src/sqlite3_utils.cpp ; do

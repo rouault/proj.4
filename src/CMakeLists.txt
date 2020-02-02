@@ -15,6 +15,8 @@ option(BUILD_PROJ
   "Build proj (cartographic projection tool)" ON)
 option(BUILD_PROJINFO
   "Build projinfo (SRS and coordinate operation metadata/query tool)" ON)
+option(BUILD_PROJ_DOWNLOAD_DATA
+  "Build proj_download_data (Data downloader tool)" ON)
 
 if(NOT MSVC)
 
@@ -71,6 +73,15 @@ if(BUILD_GIE)
   include(bin_gie.cmake)
   set(BIN_TARGETS ${BIN_TARGETS} gie)
 endif()
+
+if(BUILD_PROJ_DOWNLOAD_DATA)
+  if(NOT ENABLE_CURL)
+    message(SEND_ERROR "proj_download_data requires Curl")
+  endif()
+  include(bin_proj_download_data.cmake)
+  set(BIN_TARGETS ${BIN_TARGETS} bin_proj_download_data)
+endif()
+
 
 if(MSVC OR CMAKE_CONFIGURATION_TYPES)
   if(BIN_TARGETS)

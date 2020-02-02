@@ -1,6 +1,5 @@
 AM_CFLAGS = @C_WFLAGS@
 
-bin_PROGRAMS =	proj geod cs2cs gie cct projinfo
 EXTRA_PROGRAMS = multistresstest test228
 
 TESTS = geodtest
@@ -15,14 +14,25 @@ include_HEADERS = proj.h proj_experimental.h proj_constants.h proj_api.h geodesi
 
 EXTRA_DIST = bin_cct.cmake bin_gie.cmake bin_cs2cs.cmake \
 	bin_geod.cmake bin_proj.cmake bin_projinfo.cmake \
-	lib_proj.cmake CMakeLists.txt bin_geodtest.cmake tests/geodtest.cpp \
-	wkt1_grammar.y wkt2_grammar.y apps/emess.h apps/utils.h
+	lib_proj.cmake CMakeLists.txt bin_geodtest.cmake \
+	bin_proj_download_data.cmake \
+	tests/geodtest.cpp \
+	wkt1_grammar.y wkt2_grammar.y apps/emess.h apps/utils.h \
+	apps/proj_download_data.cpp
 
 proj_SOURCES = apps/proj.cpp apps/emess.cpp apps/utils.cpp
 projinfo_SOURCES = apps/projinfo.cpp
 cs2cs_SOURCES = apps/cs2cs.cpp apps/emess.cpp apps/utils.cpp
 cct_SOURCES = apps/cct.cpp apps/proj_strtod.cpp apps/proj_strtod.h apps/optargpm.h
 geod_SOURCES = apps/geod.cpp apps/geod_set.cpp apps/geod_interface.cpp apps/geod_interface.h apps/emess.cpp
+
+if HAVE_CURL
+proj_download_data_SOURCES = apps/proj_download_data.cpp
+proj_download_data_LDADD = libproj.la
+PROJ_DOWNLOAD_DATA_BIN = proj_download_data
+endif
+
+bin_PROGRAMS =	proj geod cs2cs gie cct projinfo $(PROJ_DOWNLOAD_DATA_BIN)
 
 gie_SOURCES = apps/gie.cpp apps/proj_strtod.cpp apps/proj_strtod.h apps/optargpm.h
 multistresstest_SOURCES = tests/multistresstest.cpp
