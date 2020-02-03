@@ -123,15 +123,6 @@ class CApi : public ::testing::Test {
 
     PJ_CONTEXT *m_ctxt = nullptr;
 
-    struct ObjectKeeper {
-        PJ *m_obj = nullptr;
-        explicit ObjectKeeper(PJ *obj) : m_obj(obj) {}
-        ~ObjectKeeper() { proj_destroy(m_obj); }
-
-        ObjectKeeper(const ObjectKeeper &) = delete;
-        ObjectKeeper &operator=(const ObjectKeeper &) = delete;
-    };
-
     struct ContextKeeper {
         PJ_OPERATION_FACTORY_CONTEXT *m_op_ctxt = nullptr;
         explicit ContextKeeper(PJ_OPERATION_FACTORY_CONTEXT *op_ctxt)
@@ -154,8 +145,19 @@ class CApi : public ::testing::Test {
 
 // ---------------------------------------------------------------------------
 
+struct ObjectKeeper {
+    PJ *m_obj = nullptr;
+    explicit ObjectKeeper(PJ *obj) : m_obj(obj) {}
+    ~ObjectKeeper() { proj_destroy_with_ctx(nullptr, m_obj); }
+
+    ObjectKeeper(const ObjectKeeper &) = delete;
+    ObjectKeeper &operator=(const ObjectKeeper &) = delete;
+};
+
+// ---------------------------------------------------------------------------
+
 TEST_F(CApi, proj_create) {
-    proj_destroy(nullptr);
+    proj_destroy_with_ctx(nullptr, nullptr);
     EXPECT_EQ(proj_create(m_ctxt, "invalid"), nullptr);
     {
         auto obj =
@@ -4150,14 +4152,14 @@ TEST_F(
     PJ *inCrsV = proj_crs_create_bound_vertical_crs(m_ctxt, inDummyCrs, crs4979,
                                                     "egm96_15.gtx");
     ASSERT_NE(inCrsV, nullptr);
-    proj_destroy(inDummyCrs);
-    proj_destroy(crs4979);
+    proj_destroy_with_ctx(m_ctxt, inDummyCrs);
+    proj_destroy_with_ctx(m_ctxt, crs4979);
 
     PJ *inCompound =
         proj_create_compound_crs(m_ctxt, "Compound", inCrsH, inCrsV);
     ASSERT_NE(inCompound, nullptr);
-    proj_destroy(inCrsH);
-    proj_destroy(inCrsV);
+    proj_destroy_with_ctx(m_ctxt, inCrsH);
+    proj_destroy_with_ctx(m_ctxt, inCrsV);
 
     PJ *outCrs = proj_create(m_ctxt, "EPSG:7665");
     ASSERT_NE(outCrs, nullptr);
@@ -4173,8 +4175,8 @@ TEST_F(
     P = proj_create_crs_to_crs_from_pj(m_ctxt, inCompound, outCrs, nullptr,
                                        nullptr);
     ASSERT_NE(P, nullptr);
-    proj_destroy(inCompound);
-    proj_destroy(outCrs);
+    proj_destroy_with_ctx(m_ctxt, inCompound);
+    proj_destroy_with_ctx(m_ctxt, outCrs);
 
     PJ_COORD in_coord;
     in_coord.xyzt.x = 350499.911;
@@ -4183,7 +4185,7 @@ TEST_F(
     in_coord.xyzt.t = 2010;
 
     PJ_COORD outcoord = proj_trans(P, PJ_FWD, in_coord);
-    proj_destroy(P);
+    proj_destroy_with_ctx(m_ctxt, P);
 
     EXPECT_NEAR(outcoord.xyzt.x, 35.09499307271, 1e-9);
     EXPECT_NEAR(outcoord.xyzt.y, -118.64014868921, 1e-9);
@@ -4221,14 +4223,14 @@ TEST_F(
     PJ *inCrsV = proj_crs_create_bound_vertical_crs(
         m_ctxt, inDummyCrs, inGeog3DCRS, "egm96_15.gtx");
     ASSERT_NE(inCrsV, nullptr);
-    proj_destroy(inDummyCrs);
-    proj_destroy(inGeog3DCRS);
+    proj_destroy_with_ctx(m_ctxt, inDummyCrs);
+    proj_destroy_with_ctx(m_ctxt, inGeog3DCRS);
 
     PJ *inCompound =
         proj_create_compound_crs(m_ctxt, "Compound", inCrsH, inCrsV);
     ASSERT_NE(inCompound, nullptr);
-    proj_destroy(inCrsH);
-    proj_destroy(inCrsV);
+    proj_destroy_with_ctx(m_ctxt, inCrsH);
+    proj_destroy_with_ctx(m_ctxt, inCrsV);
 
     // WGS84 (G1762)
     PJ *outCrs = proj_create(m_ctxt, "EPSG:7665");
@@ -4237,8 +4239,8 @@ TEST_F(
     P = proj_create_crs_to_crs_from_pj(m_ctxt, inCompound, outCrs, nullptr,
                                        nullptr);
     ASSERT_NE(P, nullptr);
-    proj_destroy(inCompound);
-    proj_destroy(outCrs);
+    proj_destroy_with_ctx(m_ctxt, inCompound);
+    proj_destroy_with_ctx(m_ctxt, outCrs);
 
     PJ_COORD in_coord;
     in_coord.xyzt.x = 35;
@@ -4247,7 +4249,7 @@ TEST_F(
     in_coord.xyzt.t = 2010;
 
     PJ_COORD outcoord = proj_trans(P, PJ_FWD, in_coord);
-    proj_destroy(P);
+    proj_destroy_with_ctx(m_ctxt, P);
 
     EXPECT_NEAR(outcoord.xyzt.x, 35.000003665064803, 1e-9);
     EXPECT_NEAR(outcoord.xyzt.y, -118.00001414221214, 1e-9);
@@ -4483,7 +4485,7 @@ TEST_F(CApi, proj_context_set_sqlite3_vfs_name) {
     proj_context_set_sqlite3_vfs_name(ctx, nullptr);
     PJ *crs_4326 = proj_create(ctx, "EPSG:4326");
     ASSERT_NE(crs_4326, nullptr);
-    proj_destroy(crs_4326);
+    proj_destroy_with_ctx(ctx, crs_4326);
 
     proj_context_destroy(ctx);
 }

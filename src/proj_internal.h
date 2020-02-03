@@ -536,7 +536,9 @@ struct PJconsts {
 
         ~CoordOperation()
         {
-            proj_destroy(pj);
+            if( pj ) {
+                proj_destroy_with_ctx(pj->ctx, pj);
+            }
         }
     };
     std::vector<CoordOperation> alternativeCoordinateOperations{};

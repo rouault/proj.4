@@ -42,7 +42,7 @@ TEST(AngularUnits, Basic) {
     EXPECT_TRUE(proj_angular_input(P, PJ_INV));
     EXPECT_TRUE(proj_angular_output(P, PJ_INV));
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
     proj_context_destroy(ctx);
 }
 
@@ -57,7 +57,7 @@ TEST(AngularUnits, Pipelines) {
     EXPECT_TRUE(proj_angular_input(P, PJ_INV));
     EXPECT_TRUE(proj_angular_output(P, PJ_INV));
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
     proj_context_destroy(ctx);
 }
 
@@ -76,7 +76,7 @@ TEST(AngularUnits, Pipelines2) {
     EXPECT_FALSE(proj_angular_input(P, PJ_FWD));
     EXPECT_FALSE(proj_angular_output(P, PJ_FWD));
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
     proj_context_destroy(ctx);
 }
 
@@ -94,7 +94,7 @@ TEST(AngularUnits, Pipelines3) {
     EXPECT_TRUE(proj_angular_input(P, PJ_FWD));
     EXPECT_FALSE(proj_angular_output(P, PJ_FWD));
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
     proj_context_destroy(ctx);
 }
 

@@ -9330,7 +9330,7 @@ PROJStringParser::createFromPROJString(const std::string &projString) {
         }
     }
 
-    proj_destroy(pj);
+    proj_destroy_with_ctx(pj_context, pj);
 
     if (!valid) {
         std::string prefix("Error " + toString(proj_context_errno(pj_context)) +

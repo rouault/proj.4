@@ -115,7 +115,7 @@ TEST(networking, basic) {
     if (networkAccessOK) {
         ASSERT_NE(P, nullptr);
     }
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
     proj_context_destroy(ctx);
     putenv(const_cast<char *>("PROJ_NETWORK="));
 #endif
@@ -148,7 +148,7 @@ TEST(networking, basic) {
     EXPECT_NEAR(lon, 1.9992776848, 1e-10);
     EXPECT_NEAR(lat, 48.9999322600, 1e-10);
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 #else
     ASSERT_EQ(P, nullptr);
 #endif
@@ -570,7 +570,7 @@ TEST(networking, custom) {
         event->file_id = 2;
         exchange.events.emplace_back(std::move(event));
     }
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     ASSERT_TRUE(exchange.allConsumedAndNoError());
 
@@ -591,7 +591,7 @@ TEST(networking, custom) {
         EXPECT_EQ(z, 1.25);
     }
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     ASSERT_TRUE(exchange.allConsumedAndNoError());
 
@@ -666,7 +666,7 @@ TEST(networking, getfilesize) {
     ASSERT_NE(P, nullptr);
     ASSERT_TRUE(exchange.allConsumedAndNoError());
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     P = proj_create(
         ctx,
@@ -675,7 +675,7 @@ TEST(networking, getfilesize) {
     ASSERT_NE(P, nullptr);
     ASSERT_TRUE(exchange.allConsumedAndNoError());
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     proj_context_destroy(ctx);
 }
@@ -861,7 +861,7 @@ TEST(networking, simul_read_range_error) {
         event->file_id = 2;
         exchange.events.emplace_back(std::move(event));
     }
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     ASSERT_TRUE(exchange.allConsumedAndNoError());
 
@@ -1043,7 +1043,7 @@ TEST(networking, simul_file_change_while_opened) {
         event->file_id = 3;
         exchange.events.emplace_back(std::move(event));
     }
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     ASSERT_TRUE(exchange.allConsumedAndNoError());
 
@@ -1075,7 +1075,7 @@ TEST(networking, curl_hgridshift) {
 
     proj_assign_context(P, ctx); // (dummy) test context reassignment
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
     proj_context_destroy(ctx);
 
     EXPECT_NEAR(c.xyz.x, 39.99999839, 1e-8);
@@ -1111,7 +1111,7 @@ TEST(networking, curl_vgridshift) {
 
     proj_assign_context(P, ctx); // (dummy) test context reassignment
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
     proj_context_destroy(ctx);
 
     EXPECT_NEAR(c.xyz.x, -30, 1e-8);
@@ -1145,7 +1145,7 @@ TEST(networking, curl_vgridshift_vertcon) {
     c.xyz.z = 0;
     c = proj_trans(P, PJ_FWD, c);
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
     proj_context_destroy(ctx);
 
     EXPECT_NEAR(c.xyz.x, 40, 1e-8);
@@ -1176,7 +1176,7 @@ TEST(networking, network_endpoint_env_variable) {
     c = proj_trans(P, PJ_FWD, c);
     putenv(const_cast<char *>("PROJ_NETWORK_ENDPOINT="));
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
     proj_context_destroy(ctx);
 
     EXPECT_EQ(c.xyz.x, HUGE_VAL);
@@ -1204,7 +1204,7 @@ TEST(networking, network_endpoint_api) {
     c.xyz.z = 0;
     c = proj_trans(P, PJ_FWD, c);
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
     proj_context_destroy(ctx);
 
     EXPECT_EQ(c.xyz.x, HUGE_VAL);
@@ -1259,7 +1259,7 @@ TEST(networking, cache_basic) {
 
     auto P = proj_create(ctx, pipeline);
     ASSERT_NE(P, nullptr);
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     EXPECT_TRUE(!pj_context_get_grid_cache_filename(ctx).empty());
 
@@ -1290,7 +1290,7 @@ TEST(networking, cache_basic) {
         dummy_read_range_cbk, nullptr));
     P = proj_create(ctx, pipeline);
     ASSERT_NE(P, nullptr);
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     proj_context_destroy(ctx);
 }
@@ -1319,7 +1319,7 @@ TEST(networking, proj_grid_cache_clear) {
 
     auto P = proj_create(ctx, pipeline);
     ASSERT_NE(P, nullptr);
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     // Check that the file exists
     {
@@ -1381,7 +1381,7 @@ TEST(networking, cache_saturation) {
     EXPECT_NEAR(lon, 1.9992776848, 1e-10);
     EXPECT_NEAR(lat, 48.9999322600, 1e-10);
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     sqlite3 *hDB = nullptr;
     sqlite3_open_v2(pj_context_get_grid_cache_filename(ctx).c_str(), &hDB,
@@ -1438,7 +1438,7 @@ TEST(networking, cache_ttl) {
     EXPECT_NEAR(lon, 1.9992776848, 1e-10);
     EXPECT_NEAR(lat, 48.9999322600, 1e-10);
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     sqlite3 *hDB = nullptr;
     sqlite3_open_v2(pj_context_get_grid_cache_filename(ctx).c_str(), &hDB,
@@ -1472,7 +1472,7 @@ TEST(networking, cache_ttl) {
     proj_log_func(ctx, nullptr, silent_logger);
     P = proj_create(ctx, pipeline);
     ASSERT_EQ(P, nullptr);
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     proj_cleanup();
 
@@ -1482,7 +1482,7 @@ TEST(networking, cache_ttl) {
     // Pipeline creation succeeds
     P = proj_create(ctx, pipeline);
     ASSERT_NE(P, nullptr);
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     hDB = nullptr;
     sqlite3_open_v2(pj_context_get_grid_cache_filename(ctx).c_str(), &hDB,
@@ -1541,7 +1541,7 @@ TEST(networking, cache_lock) {
     EXPECT_NEAR(lon, 1.9992776848, 1e-10);
     EXPECT_NEAR(lat, 48.9999322600, 1e-10);
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     // Take a lock
     sqlite3 *hDB = nullptr;
@@ -1563,7 +1563,7 @@ TEST(networking, cache_lock) {
     P = proj_create(ctx, pipeline);
     putenv(const_cast<char *>("PROJ_LOCK_MAX_ITERS="));
     ASSERT_NE(P, nullptr);
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     // Check that we have spend more than 1 sec
     time_t end;
@@ -1621,7 +1621,7 @@ TEST(networking, download_whole_files) {
     proj_trans_generic(P, PJ_FWD, &lon, sizeof(double), 1, &lat, sizeof(double),
                        1, &z, sizeof(double), 1, nullptr, 0, 0);
     EXPECT_NEAR(z, 36.5909996032715, 1e-10);
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     proj_context_set_enable_network(ctx, true);
 
@@ -1852,7 +1852,7 @@ TEST(networking, file_api) {
                        1, &z, sizeof(double), 1, nullptr, 0, 0);
     EXPECT_NEAR(z, 36.5909996032715, 1e-10);
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     ASSERT_TRUE(userData.in_read);
     ASSERT_TRUE(userData.in_seek);

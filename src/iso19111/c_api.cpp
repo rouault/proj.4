@@ -397,12 +397,14 @@ static const char *getOptionValue(const char *option,
  * Technically this just increases the reference counter on the object, since
  * PJ objects are immutable.
  *
- * The returned object must be unreferenced with proj_destroy() after use.
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
+ * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param obj Object to clone. Must not be NULL.
- * @return Object that must be unreferenced with proj_destroy(), or NULL in
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL in
  * case of error.
  */
 PJ *proj_clone(PJ_CONTEXT *ctx, const PJ *obj) {
@@ -426,12 +428,14 @@ PJ *proj_clone(PJ_CONTEXT *ctx, const PJ *obj) {
  *
  * This function calls osgeo::proj::io::createFromUserInput()
  *
- * The returned object must be unreferenced with proj_destroy() after use.
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
+ * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param text String (must not be NULL)
- * @return Object that must be unreferenced with proj_destroy(), or NULL in
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL in
  * case of error.
  */
 PJ *proj_create(PJ_CONTEXT *ctx, const char *text) {
@@ -485,7 +489,8 @@ template <class T> static PROJ_STRING_LIST to_string_list(T &&set) {
  *
  * This function calls osgeo::proj::io::WKTParser::createFromWKT()
  *
- * The returned object must be unreferenced with proj_destroy() after use.
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
+ * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
@@ -503,7 +508,8 @@ template <class T> static PROJ_STRING_LIST to_string_list(T &&set) {
  * @param out_grammar_errors Pointer to a PROJ_STRING_LIST object, or NULL.
  * If provided, *out_grammar_errors will contain a list of errors regarding the
  * WKT grammar. It must be freed with proj_string_list_destroy().
- * @return Object that must be unreferenced with proj_destroy(), or NULL in
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL in
  * case of error.
  */
 PJ *proj_create_from_wkt(PJ_CONTEXT *ctx, const char *wkt,
@@ -604,7 +610,8 @@ PJ *proj_create_from_wkt(PJ_CONTEXT *ctx, const char *wkt,
 
 /** \brief Instantiate an object from a database lookup.
  *
- * The returned object must be unreferenced with proj_destroy() after use.
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
+ * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx Context, or NULL for default context.
@@ -615,7 +622,8 @@ PJ *proj_create_from_wkt(PJ_CONTEXT *ctx, const char *wkt,
  * should be substituted to the official grid names. Only used on
  * transformations
  * @param options should be set to NULL for now
- * @return Object that must be unreferenced with proj_destroy(), or NULL in
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL in
  * case of error.
  */
 PJ *proj_create_from_database(PJ_CONTEXT *ctx, const char *auth_name,
@@ -1694,13 +1702,14 @@ static const GeodeticCRS *extractGeodeticCRS(PJ_CONTEXT *ctx, const PJ *crs,
 
 /** \brief Get the geodeticCRS / geographicCRS from a CRS
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param crs Object of type CRS (must not be NULL)
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error.
  */
 PJ *proj_crs_get_geodetic_crs(PJ_CONTEXT *ctx, const PJ *crs) {
@@ -1718,7 +1727,7 @@ PJ *proj_crs_get_geodetic_crs(PJ_CONTEXT *ctx, const PJ *crs) {
 
 /** \brief Get a CRS component from a CompoundCRS
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -1726,7 +1735,8 @@ PJ *proj_crs_get_geodetic_crs(PJ_CONTEXT *ctx, const PJ *crs) {
  * @param crs Object of type CRS (must not be NULL)
  * @param index Index of the CRS component (typically 0 = horizontal, 1 =
  * vertical)
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error.
  */
 PJ *proj_crs_get_sub_crs(PJ_CONTEXT *ctx, const PJ *crs, int index) {
@@ -1748,7 +1758,7 @@ PJ *proj_crs_get_sub_crs(PJ_CONTEXT *ctx, const PJ *crs, int index) {
 
 /** \brief Returns a BoundCRS
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -1756,7 +1766,8 @@ PJ *proj_crs_get_sub_crs(PJ_CONTEXT *ctx, const PJ *crs, int index) {
  * @param base_crs Base CRS (must not be NULL)
  * @param hub_crs Hub CRS (must not be NULL)
  * @param transformation Transformation (must not be NULL)
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error.
  */
 PJ *proj_crs_create_bound_crs(PJ_CONTEXT *ctx, const PJ *base_crs,
@@ -1797,7 +1808,7 @@ PJ *proj_crs_create_bound_crs(PJ_CONTEXT *ctx, const PJ *base_crs,
 /** \brief Returns potentially
  * a BoundCRS, with a transformation to EPSG:4326, wrapping this CRS
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -1814,7 +1825,8 @@ PJ *proj_crs_create_bound_crs(PJ_CONTEXT *ctx, const PJ *base_crs,
  * intermediate CRS may be considered when computing the possible
  * transformations. Slower.</li>
  * </ul>
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error.
  */
 PJ *proj_crs_create_bound_crs_to_WGS84(PJ_CONTEXT *ctx, const PJ *crs,
@@ -1866,7 +1878,7 @@ PJ *proj_crs_create_bound_crs_to_WGS84(PJ_CONTEXT *ctx, const PJ *crs,
 /** \brief Returns a BoundCRS, with a transformation to a hub geographic 3D crs
  * (use EPSG:4979 for WGS84 for example), using a grid.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -1875,7 +1887,8 @@ PJ *proj_crs_create_bound_crs_to_WGS84(PJ_CONTEXT *ctx, const PJ *crs,
  * @param hub_geographic_3D_crs Object of type Geographic 3D CRS (must not be
  * NULL)
  * @param grid_name Grid name (typically a .gtx file)
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error.
  * @since 6.3
  */
@@ -1922,13 +1935,14 @@ PJ *proj_crs_create_bound_vertical_crs(PJ_CONTEXT *ctx, const PJ *vert_crs,
 
 /** \brief Get the ellipsoid from a CRS or a GeodeticReferenceFrame.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param obj Object of type CRS or GeodeticReferenceFrame (must not be NULL)
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error.
  */
 PJ *proj_get_ellipsoid(PJ_CONTEXT *ctx, const PJ *obj) {
@@ -1954,13 +1968,14 @@ PJ *proj_get_ellipsoid(PJ_CONTEXT *ctx, const PJ *obj) {
 
 /** \brief Get the horizontal datum from a CRS
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param crs Object of type CRS (must not be NULL)
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error.
  */
 PJ *proj_crs_get_horizontal_datum(PJ_CONTEXT *ctx, const PJ *crs) {
@@ -2037,13 +2052,14 @@ int proj_ellipsoid_get_parameters(PJ_CONTEXT *ctx, const PJ *ellipsoid,
 
 /** \brief Get the prime meridian of a CRS or a GeodeticReferenceFrame.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param obj Object of type CRS or GeodeticReferenceFrame (must not be NULL)
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error.
  */
 
@@ -2112,13 +2128,14 @@ int proj_prime_meridian_get_parameters(PJ_CONTEXT *ctx,
 /** \brief Return the base CRS of a BoundCRS or a DerivedCRS/ProjectedCRS, or
  * the source CRS of a CoordinateOperation.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param obj Object of type BoundCRS or CoordinateOperation (must not be NULL)
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error, or missing source CRS.
  */
 PJ *proj_get_source_crs(PJ_CONTEXT *ctx, const PJ *obj) {
@@ -2155,13 +2172,14 @@ PJ *proj_get_source_crs(PJ_CONTEXT *ctx, const PJ *obj) {
 /** \brief Return the hub CRS of a BoundCRS or the target CRS of a
  * CoordinateOperation.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param obj Object of type BoundCRS or CoordinateOperation (must not be NULL)
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error, or missing target CRS.
  */
 PJ *proj_get_target_crs(PJ_CONTEXT *ctx, const PJ *obj) {
@@ -2588,14 +2606,14 @@ void proj_crs_info_list_destroy(PROJ_CRS_INFO **list) {
 /** \brief Return the Conversion of a DerivedCRS (such as a ProjectedCRS),
  * or the Transformation from the baseCRS to the hubCRS of a BoundCRS
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param crs Object of type DerivedCRS or BoundCRSs (must not be NULL)
  * @return Object of type SingleOperation that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_crs_get_coordoperation(PJ_CONTEXT *ctx, const PJ *crs) {
     SANITIZE_CTX(ctx);
@@ -2797,7 +2815,7 @@ static GeodeticReferenceFrameNNPtr createGeodeticReferenceFrame(
 
 /** \brief Create a GeographicCRS.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -2818,7 +2836,7 @@ static GeodeticReferenceFrameNNPtr createGeodeticReferenceFrame(
  * @param ellipsoidal_cs Coordinate system. Must not be NULL.
  *
  * @return Object of type GeographicCRS that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_create_geographic_crs(PJ_CONTEXT *ctx, const char *crs_name,
                                const char *datum_name, const char *ellps_name,
@@ -2855,7 +2873,7 @@ PJ *proj_create_geographic_crs(PJ_CONTEXT *ctx, const char *crs_name,
 
 /** \brief Create a GeographicCRS.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -2865,7 +2883,7 @@ PJ *proj_create_geographic_crs(PJ_CONTEXT *ctx, const char *crs_name,
  * @param ellipsoidal_cs Coordinate system. Must not be NULL.
  *
  * @return Object of type GeographicCRS that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_create_geographic_crs_from_datum(PJ_CONTEXT *ctx, const char *crs_name,
                                           PJ *datum, PJ *ellipsoidal_cs) {
@@ -2900,7 +2918,7 @@ PJ *proj_create_geographic_crs_from_datum(PJ_CONTEXT *ctx, const char *crs_name,
 
 /** \brief Create a GeodeticCRS of geocentric type.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -2922,7 +2940,7 @@ PJ *proj_create_geographic_crs_from_datum(PJ_CONTEXT *ctx, const char *crs_name,
  * 0 for Metre if linear_units == NULL. Otherwise should be not NULL
  *
  * @return Object of type GeodeticCRS that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_create_geocentric_crs(
     PJ_CONTEXT *ctx, const char *crs_name, const char *datum_name,
@@ -2954,7 +2972,7 @@ PJ *proj_create_geocentric_crs(
 
 /** \brief Create a GeodeticCRS of geocentric type.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -2966,7 +2984,7 @@ PJ *proj_create_geocentric_crs(
  * 0 for Metre if linear_units == NULL. Otherwise should be not NULL
  *
  * @return Object of type GeodeticCRS that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_create_geocentric_crs_from_datum(PJ_CONTEXT *ctx, const char *crs_name,
                                           const PJ *datum,
@@ -2997,7 +3015,7 @@ PJ *proj_create_geocentric_crs_from_datum(PJ_CONTEXT *ctx, const char *crs_name,
 
 /** \brief Create a DerivedGeograhicCRS.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3009,7 +3027,7 @@ PJ *proj_create_geocentric_crs_from_datum(PJ_CONTEXT *ctx, const char *crs_name,
  * @param ellipsoidal_cs Coordinate system. Must not be NULL.
  *
  * @return Object of type GeodeticCRS that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  *
  * @since 7.0
  */
@@ -3057,7 +3075,7 @@ int proj_is_derived_crs(PJ_CONTEXT *ctx, const PJ *crs) {
 
 /** \brief Create a VerticalCRS
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3069,7 +3087,7 @@ int proj_is_derived_crs(PJ_CONTEXT *ctx, const PJ *crs) {
  * 0 for Metre if linear_units == NULL. Otherwise should be not NULL
  *
  * @return Object of type VerticalCRS that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_create_vertical_crs(PJ_CONTEXT *ctx, const char *crs_name,
                              const char *datum_name, const char *linear_units,
@@ -3084,7 +3102,7 @@ PJ *proj_create_vertical_crs(PJ_CONTEXT *ctx, const char *crs_name,
 
 /** \brief Create a VerticalCRS
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3108,7 +3126,7 @@ PJ *proj_create_vertical_crs(PJ_CONTEXT *ctx, const char *crs_name,
  * @param geoid_geog_crs Geographic CRS for the geoid transformation, or NULL.
  * @param options should be set to NULL for now
  * @return Object of type VerticalCRS that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_create_vertical_crs_ex(
     PJ_CONTEXT *ctx, const char *crs_name, const char *datum_name,
@@ -3157,7 +3175,7 @@ PJ *proj_create_vertical_crs_ex(
 
 /** \brief Create a CompoundCRS
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3167,7 +3185,7 @@ PJ *proj_create_vertical_crs_ex(
  * @param vert_crs Vertical CRS. must not be NULL.
  *
  * @return Object of type CompoundCRS that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_create_compound_crs(PJ_CONTEXT *ctx, const char *crs_name,
                              PJ *horiz_crs, PJ *vert_crs) {
@@ -3200,7 +3218,7 @@ PJ *proj_create_compound_crs(PJ_CONTEXT *ctx, const char *crs_name,
  *
  * Currently, only implemented on CRS objects.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3209,7 +3227,7 @@ PJ *proj_create_compound_crs(PJ_CONTEXT *ctx, const char *crs_name,
  * @param name New name. Must not be NULL
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ PROJ_DLL *proj_alter_name(PJ_CONTEXT *ctx, const PJ *obj, const char *name) {
     SANITIZE_CTX(ctx);
@@ -3231,7 +3249,7 @@ PJ PROJ_DLL *proj_alter_name(PJ_CONTEXT *ctx, const PJ *obj, const char *name) {
  *
  * Currently, only implemented on CRS objects.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3241,7 +3259,7 @@ PJ PROJ_DLL *proj_alter_name(PJ_CONTEXT *ctx, const PJ *obj, const char *name) {
  * @param code Code. Must not be NULL
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ PROJ_DLL *proj_alter_id(PJ_CONTEXT *ctx, const PJ *obj,
                            const char *auth_name, const char *code) {
@@ -3268,7 +3286,7 @@ PJ PROJ_DLL *proj_alter_id(PJ_CONTEXT *ctx, const PJ *obj,
  * CRS with new_geod_crs.
  * In other cases, it returns a clone of obj.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3277,7 +3295,7 @@ PJ PROJ_DLL *proj_alter_id(PJ_CONTEXT *ctx, const PJ *obj,
  * @param new_geod_crs Object of type GeodeticCRS. Must not be NULL
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_crs_alter_geodetic_crs(PJ_CONTEXT *ctx, const PJ *obj,
                                 const PJ *new_geod_crs) {
@@ -3310,7 +3328,7 @@ PJ *proj_crs_alter_geodetic_crs(PJ_CONTEXT *ctx, const PJ *obj,
  *
  * The CRS must be or contain a GeographicCRS.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3323,7 +3341,7 @@ PJ *proj_crs_alter_geodetic_crs(PJ_CONTEXT *ctx, const PJ *obj,
  * @param unit_code Unit code. Or NULL.
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_crs_alter_cs_angular_unit(PJ_CONTEXT *ctx, const PJ *obj,
                                    const char *angular_units,
@@ -3338,7 +3356,7 @@ PJ *proj_crs_alter_cs_angular_unit(PJ_CONTEXT *ctx, const PJ *obj,
     }
     auto geogCRS = dynamic_cast<const GeographicCRS *>(geodCRS->iso_obj.get());
     if (!geogCRS) {
-        proj_destroy(geodCRS);
+        proj_destroy_with_ctx(ctx, geodCRS);
         return nullptr;
     }
 
@@ -3351,15 +3369,15 @@ PJ *proj_crs_alter_cs_angular_unit(PJ_CONTEXT *ctx, const PJ *obj,
                      createPropertyMapName(proj_get_name(geodCRS)),
                      geogCRS->datum(), geogCRS->datumEnsemble(),
                      geogCRS->coordinateSystem()->alterAngularUnit(angUnit)));
-        proj_destroy(geodCRS);
+        proj_destroy_with_ctx(ctx, geodCRS);
     } catch (const std::exception &e) {
         proj_log_error(ctx, __FUNCTION__, e.what());
-        proj_destroy(geodCRS);
+        proj_destroy_with_ctx(ctx, geodCRS);
         return nullptr;
     }
 
     auto ret = proj_crs_alter_geodetic_crs(ctx, obj, geogCRSAltered);
-    proj_destroy(geogCRSAltered);
+    proj_destroy_with_ctx(ctx, geogCRSAltered);
     return ret;
 }
 
@@ -3370,7 +3388,7 @@ PJ *proj_crs_alter_cs_angular_unit(PJ_CONTEXT *ctx, const PJ *obj,
  *
  * The CRS must be or contain a ProjectedCRS, VerticalCRS or a GeocentricCRS.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3383,7 +3401,7 @@ PJ *proj_crs_alter_cs_angular_unit(PJ_CONTEXT *ctx, const PJ *obj,
  * @param unit_code Unit code. Or NULL.
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_crs_alter_cs_linear_unit(PJ_CONTEXT *ctx, const PJ *obj,
                                   const char *linear_units,
@@ -3413,7 +3431,7 @@ PJ *proj_crs_alter_cs_linear_unit(PJ_CONTEXT *ctx, const PJ *obj,
  *
  * The CRS must be or contain a ProjectedCRS, VerticalCRS or a GeocentricCRS.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3430,7 +3448,7 @@ PJ *proj_crs_alter_cs_linear_unit(PJ_CONTEXT *ctx, const PJ *obj,
  * equivalent to the original one for reprojection purposes).
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_crs_alter_parameters_linear_unit(PJ_CONTEXT *ctx, const PJ *obj,
                                           const char *linear_units,
@@ -3464,7 +3482,7 @@ PJ *proj_crs_alter_parameters_linear_unit(PJ_CONTEXT *ctx, const PJ *obj,
  *
  * See osgeo::proj::crs::CRS::promoteTo3D().
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3474,7 +3492,7 @@ PJ *proj_crs_alter_parameters_linear_unit(PJ_CONTEXT *ctx, const PJ *obj,
  * @param crs_2D 2D CRS to be "promoted" to 3D. Must not be NULL.
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  * @since 6.3
  */
 PJ *proj_crs_promote_to_3D(PJ_CONTEXT *ctx, const char *crs_3D_name,
@@ -3517,7 +3535,7 @@ PJ *proj_crs_promote_to_3D(PJ_CONTEXT *ctx, const char *crs_3D_name,
  * height, oriented upwards, and with metre units. This is equivalent to using
  * proj_crs_promote_to_3D().
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3529,7 +3547,7 @@ PJ *proj_crs_promote_to_3D(PJ_CONTEXT *ctx, const char *crs_3D_name,
  * @param geog_3D_crs Base geographic 3D CRS for the new CRS. May be NULL.
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  * @since 6.3
  */
 PJ *proj_crs_create_projected_3D_crs_from_2D(PJ_CONTEXT *ctx,
@@ -3606,7 +3624,7 @@ PJ *proj_crs_create_projected_3D_crs_from_2D(PJ_CONTEXT *ctx,
  *
  * See osgeo::proj::crs::CRS::demoteTo2D().
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3616,7 +3634,7 @@ PJ *proj_crs_create_projected_3D_crs_from_2D(PJ_CONTEXT *ctx,
  * @param crs_3D 3D CRS to be "demoted" to 2D. Must not be NULL.
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  * @since 6.3
  */
 PJ *proj_crs_demote_to_2D(PJ_CONTEXT *ctx, const char *crs_2D_name,
@@ -3646,7 +3664,7 @@ PJ *proj_crs_demote_to_2D(PJ_CONTEXT *ctx, const char *crs_2D_name,
 
 /** \brief Instantiate a EngineeringCRS with just a name
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3654,7 +3672,7 @@ PJ *proj_crs_demote_to_2D(PJ_CONTEXT *ctx, const char *crs_2D_name,
  * @param crs_name CRS name. Or NULL.
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ PROJ_DLL *proj_create_engineering_crs(PJ_CONTEXT *ctx,
                                          const char *crs_name) {
@@ -3746,7 +3764,7 @@ static void setSingleOperationElements(
 
 /** \brief Instantiate a Conversion
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3761,7 +3779,7 @@ static void setSingleOperationElements(
  * @param params Parameter descriptions (array of size param_count)
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 
 PJ *proj_create_conversion(PJ_CONTEXT *ctx, const char *name,
@@ -3793,7 +3811,7 @@ PJ *proj_create_conversion(PJ_CONTEXT *ctx, const char *name,
 
 /** \brief Instantiate a Transformation
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -3816,7 +3834,7 @@ PJ *proj_create_conversion(PJ_CONTEXT *ctx, const char *name,
  * values means unknown.
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 
 PJ *proj_create_transformation(PJ_CONTEXT *ctx, const char *name,
@@ -3904,7 +3922,7 @@ PJ *proj_create_transformation(PJ_CONTEXT *ctx, const char *name,
  * @param new_method_name EPSG or PROJ target method name. Or nullptr  (in which
  * case new_method_epsg_code must be specified).
  * @return new conversion that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 PJ *proj_convert_conversion_to_other_method(PJ_CONTEXT *ctx,
                                             const PJ *conversion,
@@ -3993,7 +4011,7 @@ static CoordinateSystemAxisNNPtr createAxis(const PJ_AXIS_DESCRIPTION &axis) {
 
 /** \brief Instantiate a CoordinateSystem.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -4003,7 +4021,7 @@ static CoordinateSystemAxisNNPtr createAxis(const PJ_AXIS_DESCRIPTION &axis) {
  * @param axis Axis description (array of size axis_count)
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 
 PJ *proj_create_cs(PJ_CONTEXT *ctx, PJ_COORDINATE_SYSTEM_TYPE type,
@@ -4120,7 +4138,7 @@ PJ *proj_create_cs(PJ_CONTEXT *ctx, PJ_COORDINATE_SYSTEM_TYPE type,
 
 /** \brief Instantiate a CartesiansCS 2D
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -4130,7 +4148,7 @@ PJ *proj_create_cs(PJ_CONTEXT *ctx, PJ_COORDINATE_SYSTEM_TYPE type,
  * @param unit_conv_factor Unit conversion factor to SI.
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 
 PJ *proj_create_cartesian_2D_cs(PJ_CONTEXT *ctx, PJ_CARTESIAN_CS_2D_TYPE type,
@@ -4173,7 +4191,7 @@ PJ *proj_create_cartesian_2D_cs(PJ_CONTEXT *ctx, PJ_CARTESIAN_CS_2D_TYPE type,
 
 /** \brief Instantiate a Ellipsoidal 2D
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -4183,7 +4201,7 @@ PJ *proj_create_cartesian_2D_cs(PJ_CONTEXT *ctx, PJ_CARTESIAN_CS_2D_TYPE type,
  * @param unit_conv_factor Unit conversion factor to SI.
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 
 PJ *proj_create_ellipsoidal_2D_cs(PJ_CONTEXT *ctx,
@@ -4212,7 +4230,7 @@ PJ *proj_create_ellipsoidal_2D_cs(PJ_CONTEXT *ctx,
 
 /** \brief Instantiate a Ellipsoidal 3D
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -4226,7 +4244,7 @@ PJ *proj_create_ellipsoidal_2D_cs(PJ_CONTEXT *ctx,
  * factor to SI.
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  * @since 6.3
  */
 
@@ -4264,7 +4282,7 @@ PJ *proj_create_ellipsoidal_3D_cs(PJ_CONTEXT *ctx,
 
 /** \brief Instantiate a ProjectedCRS
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -4275,7 +4293,7 @@ PJ *proj_create_ellipsoidal_3D_cs(PJ_CONTEXT *ctx,
  * @param coordinate_system Cartesian coordinate system. Must not be NULL.
  *
  * @return Object that must be unreferenced with
- * proj_destroy(), or NULL in case of error.
+ * proj_destroy_with_ctx(), or NULL in case of error.
  */
 
 PJ *proj_create_projected_crs(PJ_CONTEXT *ctx, const char *crs_name,
@@ -7479,14 +7497,14 @@ int proj_list_get_count(const PJ_OBJ_LIST *result) {
 
 /** \brief Return an object from the result set
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param result Object of type PJ_OBJ_LIST (must not be NULL)
  * @param index Index
- * @return a new object that must be unreferenced with proj_destroy(),
+ * @return a new object that must be unreferenced with proj_destroy_with_ctx(),
  * or nullptr in case of error.
  */
 
@@ -7545,13 +7563,14 @@ double proj_coordoperation_get_accuracy(PJ_CONTEXT *ctx,
 
 /** \brief Returns the datum of a SingleCRS.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param crs Object of type SingleCRS (must not be NULL)
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error (or if there is no datum)
  */
 PJ *proj_crs_get_datum(PJ_CONTEXT *ctx, const PJ *crs) {
@@ -7573,13 +7592,14 @@ PJ *proj_crs_get_datum(PJ_CONTEXT *ctx, const PJ *crs) {
 
 /** \brief Returns the coordinate system of a SingleCRS.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
  * @param ctx PROJ context, or NULL for default context
  * @param crs Object of type SingleCRS (must not be NULL)
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error.
  */
 PJ *proj_crs_get_coordinate_system(PJ_CONTEXT *ctx, const PJ *crs) {
@@ -7743,7 +7763,8 @@ int proj_cs_get_axis_info(PJ_CONTEXT *ctx, const PJ *cs, int index,
  * @param ctx PROJ context, or NULL for default context
  * @param obj Object of type CRS, or CoordinateOperation created with
  * proj_create_crs_to_crs() (must not be NULL)
- * @return a new PJ* object to free with proj_destroy() in case of success, or
+ * @return a new PJ* object to free with proj_destroy_with_ctx() in case of
+ * success, or
  * nullptr in case of error
  */
 PJ *proj_normalize_for_visualization(PJ_CONTEXT *ctx, const PJ *obj) {
@@ -7832,7 +7853,8 @@ PJ *proj_normalize_for_visualization(PJ_CONTEXT *ctx, const PJ *obj) {
  *
  * @param ctx PROJ context, or NULL for default context
  * @param obj Object of type CoordinateOperation (must not be NULL)
- * @return a new PJ* object to free with proj_destroy() in case of success, or
+ * @return a new PJ* object to free with proj_destroy_with_ctx() in case of
+ * success, or
  * nullptr in case of error
  * @since 6.3
  */
@@ -7882,7 +7904,7 @@ int proj_concatoperation_get_step_count(PJ_CONTEXT *ctx,
  *
  * The input object must be a concatenated operation.
  *
- * The returned object must be unreferenced with proj_destroy() after
+ * The returned object must be unreferenced with proj_destroy_with_ctx() after
  * use.
  * It should be used by at most one thread at a time.
  *
@@ -7890,7 +7912,8 @@ int proj_concatoperation_get_step_count(PJ_CONTEXT *ctx,
  * @param concatoperation Concatenated operation (must not be NULL)
  * @param i_step Index of the step to extract. Between 0 and
  *               proj_concatoperation_get_step_count()-1
- * @return Object that must be unreferenced with proj_destroy(), or NULL
+ * @return Object that must be unreferenced with proj_destroy_with_ctx(), or
+ * NULL
  * in case of error.
  */
 PJ *proj_concatoperation_get_step(PJ_CONTEXT *ctx, const PJ *concatoperation,

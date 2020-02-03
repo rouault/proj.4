@@ -1,5 +1,7 @@
 /* <<< Release Notice for library >>> */
 
+#define PROJ_IGNORE_DEPRECATION_WARNINGS
+
 #include "proj.h"
 #include "proj_internal.h"
 

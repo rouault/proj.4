@@ -151,12 +151,31 @@ extern "C" {
 #endif
 #endif
 
+#ifdef PROJ_IGNORE_DEPRECATION_WARNINGS
+  #define PROJ_DEPRECATED(decl, msg)      decl
+#else
+  #if defined(__has_extension)
+    #if __has_extension(attribute_deprecated_with_message)
+      /* Clang extension */
+      #define PROJ_DEPRECATED(decl, msg)  decl __attribute__ ((deprecated(msg)))
+    #else
+      #define PROJ_DEPRECATED(decl, msg)  decl
+    #endif
+  #elif defined(__GNUC__)
+    #define PROJ_DEPRECATED(decl, msg)    decl __attribute__ ((deprecated))
+  #elif defined(_MSVC_VER)
+    #define PROJ_DEPRECATED(decl, msg)    __declspec(deprecated) x
+  #else
+    #define PROJ_DEPRECATED(decl, msg)    decl
+  #endif
+#endif
+
 /* The version numbers should be updated with every release! **/
 #define PROJ_VERSION_MAJOR 7
 #define PROJ_VERSION_MINOR 0
 #define PROJ_VERSION_PATCH 0
 
-extern char const PROJ_DLL pj_release[]; /* global release id string */
+PROJ_DEPRECATED(extern char const PROJ_DLL pj_release[], "Use proj_info() instead"); /* global release id string */
 
 /* first forward declare everything needed */
 
@@ -524,7 +543,8 @@ PJ PROJ_DLL *proj_create_crs_to_crs_from_pj(PJ_CONTEXT *ctx,
                                             const char* const *options);
 PJ PROJ_DLL *proj_normalize_for_visualization(PJ_CONTEXT *ctx, const PJ* obj);
 void PROJ_DLL proj_assign_context(PJ* pj, PJ_CONTEXT* ctx);
-PJ PROJ_DLL *proj_destroy (PJ *P);
+PROJ_DEPRECATED(PJ PROJ_DLL *proj_destroy (PJ *P), "Deprecated by proj_destroy_with_ctx");
+void PROJ_DLL proj_destroy_with_ctx(PJ_CONTEXT* ctx, PJ* pj);
 
 
 PJ_AREA PROJ_DLL *proj_area_create(void);

@@ -128,7 +128,9 @@ struct Step {
     Step& operator=(const Step&) = delete;
 
     ~Step() {
-        proj_destroy(pj);
+        if( pj ) {
+            proj_destroy_with_ctx(pj->ctx, pj);
+        }
     }
 };
 

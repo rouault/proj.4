@@ -279,7 +279,7 @@ Expand key from buffer or (if not in buffer) from init file
 
             proj_string = proj_as_proj_string(ctx, src, PJ_PROJ_4, nullptr);
             if( !proj_string ) {
-                proj_destroy(src);
+                proj_destroy_with_ctx(ctx, src);
                 return nullptr;
             }
             definition = (char*)calloc(1, strlen(proj_string)+1);
@@ -287,7 +287,7 @@ Expand key from buffer or (if not in buffer) from init file
                 strcpy(definition, proj_string);
             }
 
-            proj_destroy(src);
+            proj_destroy_with_ctx(ctx, src);
         }
     }
 

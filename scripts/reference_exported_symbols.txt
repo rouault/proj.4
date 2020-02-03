@@ -970,6 +970,7 @@ proj_cs_get_axis_count
 proj_cs_get_axis_info
 proj_cs_get_type
 proj_destroy
+proj_destroy_with_ctx
 proj_dmstor
 proj_download_file
 proj_ellipsoid_get_parameters

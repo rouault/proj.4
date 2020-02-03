@@ -392,7 +392,7 @@ static int process_file (const char *fname) {
     T.op_skip = T.total_skip = 0;
 
     if (T.skip) {
-        proj_destroy (T.P);
+        proj_destroy_with_ctx(nullptr, T.P);
         T.P = nullptr;
         return 0;
     }
@@ -406,7 +406,7 @@ static int process_file (const char *fname) {
 
     while (get_inp(F)) {
         if (SKIP==dispatch (F->tag, F->args)) {
-            proj_destroy (T.P);
+            proj_destroy_with_ctx(nullptr, T.P);
             T.P = nullptr;
             return 0;
         }
@@ -597,7 +597,7 @@ either a conversion or a transformation)
     proj_errno_reset (T.P);
 
     if (T.P)
-        proj_destroy (T.P);
+        proj_destroy_with_ctx(nullptr, T.P);
     proj_errno_reset (nullptr);
     proj_context_use_proj4_init_rules(nullptr, T.use_proj4_init_rules);
 
@@ -632,7 +632,7 @@ static int crs_to_crs_operation() {
     proj_errno_reset (T.P);
 
     if (T.P)
-        proj_destroy (T.P);
+        proj_destroy_with_ctx(nullptr, T.P);
     proj_errno_reset (nullptr);
     proj_context_use_proj4_init_rules(nullptr, T.use_proj4_init_rules);
 

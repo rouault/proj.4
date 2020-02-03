@@ -119,7 +119,7 @@ TEST(proj_context, proj_context_set_file_finder) {
 
     auto P = proj_create(ctx, "+init=temp_proj_dic1:MY_PIPELINE");
     EXPECT_NE(P, nullptr);
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     EXPECT_EQ(finderData.got_ctx, ctx);
 
@@ -142,7 +142,7 @@ TEST(proj_context, proj_context_set_search_paths) {
 
     auto P = proj_create(ctx, "+init=temp_proj_dic2:MY_PIPELINE");
     EXPECT_NE(P, nullptr);
-    proj_destroy(P);
+    proj_destroy_with_ctx(ctx, P);
 
     proj_context_destroy(ctx);
 
@@ -163,7 +163,7 @@ TEST(proj_context, read_grid_from_user_writable_directory) {
         // calling script), we cannot find the file
         auto P = proj_create(ctx, "+init=temp_proj_dic3:MY_PIPELINE");
         EXPECT_EQ(P, nullptr);
-        proj_destroy(P);
+        proj_destroy_with_ctx(ctx, P);
     }
     {
         // Cancel the effect of PROJ_SKIP_READ_USER_WRITABLE_DIRECTORY
@@ -172,7 +172,7 @@ TEST(proj_context, read_grid_from_user_writable_directory) {
         EXPECT_NE(P, nullptr);
         putenv(
             const_cast<char *>("PROJ_SKIP_READ_USER_WRITABLE_DIRECTORY=YES"));
-        proj_destroy(P);
+        proj_destroy_with_ctx(ctx, P);
     }
     proj_context_destroy(ctx);
     MyUnlink(filename);

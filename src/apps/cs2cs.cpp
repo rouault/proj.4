@@ -240,7 +240,7 @@ static PJ *instantiate_crs(const std::string &definition,
     auto type = proj_get_type(crs);
     if (type == PJ_TYPE_BOUND_CRS) {
         auto base = proj_get_source_crs(nullptr, crs);
-        proj_destroy(crs);
+        proj_destroy_with_ctx(nullptr, crs);
         crs = base;
         type = proj_get_type(crs);
     }
@@ -264,7 +264,7 @@ static PJ *instantiate_crs(const std::string &definition,
             NS_PROJ::internal::ci_find(std::string(axisName), "latitude") !=
             std::string::npos;
 
-        proj_destroy(cs);
+        proj_destroy_with_ctx(nullptr, cs);
     }
 
     return crs;
@@ -287,7 +287,7 @@ static std::string get_geog_crs_proj_string_from_proj_crs(PJ *src,
     auto baseType = proj_get_type(base);
     if (baseType != PJ_TYPE_GEOGRAPHIC_2D_CRS &&
         baseType != PJ_TYPE_GEOGRAPHIC_3D_CRS) {
-        proj_destroy(base);
+        proj_destroy_with_ctx(nullptr, base);
         return std::string();
     }
 
@@ -307,11 +307,11 @@ static std::string get_geog_crs_proj_string_from_proj_crs(PJ *src,
     isLatFirst = NS_PROJ::internal::ci_find(std::string(axisName),
                                             "latitude") != std::string::npos;
 
-    proj_destroy(cs);
+    proj_destroy_with_ctx(nullptr, cs);
 
     auto retCStr = proj_as_proj_string(nullptr, base, PJ_PROJ_5, nullptr);
     std::string ret(retCStr ? retCStr : "");
-    proj_destroy(base);
+    proj_destroy_with_ctx(nullptr, base);
     return ret;
 }
 
@@ -579,8 +579,8 @@ int main(int argc, char **argv) {
         }
         srcIsGeog = true;
     }
-    proj_destroy(src);
-    proj_destroy(dst);
+    proj_destroy_with_ctx(nullptr, src);
+    proj_destroy_with_ctx(nullptr, dst);
 
     src = proj_create(nullptr, pj_add_type_crs_if_needed(fromStr).c_str());
     dst = proj_create(nullptr, pj_add_type_crs_if_needed(toStr).c_str());
@@ -589,13 +589,13 @@ int main(int argc, char **argv) {
         proj_get_type(dst) == PJ_TYPE_COMPOUND_CRS ) {
         auto src3D = proj_crs_promote_to_3D(nullptr, nullptr, src);
         if( src3D ) {
-            proj_destroy(src);
+            proj_destroy_with_ctx(nullptr, src);
             src = src3D;
         }
 
         auto dst3D = proj_crs_promote_to_3D(nullptr, nullptr, dst);
         if( dst3D ) {
-            proj_destroy(dst);
+            proj_destroy_with_ctx(nullptr, dst);
             dst = dst3D;
         }
     }
@@ -603,8 +603,8 @@ int main(int argc, char **argv) {
     transformation = proj_create_crs_to_crs_from_pj(nullptr, src, dst,
                                                     nullptr, nullptr);
 
-    proj_destroy(src);
-    proj_destroy(dst);
+    proj_destroy_with_ctx(nullptr, src);
+    proj_destroy_with_ctx(nullptr, dst);
 
     if (!transformation) {
         emess(3, "cannot initialize transformation\ncause: %s",
@@ -652,7 +652,7 @@ int main(int argc, char **argv) {
         emess_dat.File_name = nullptr;
     }
 
-    proj_destroy(transformation);
+    proj_destroy_with_ctx(nullptr, transformation);
 
     proj_cleanup();
 

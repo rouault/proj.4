@@ -755,8 +755,10 @@ PJ *pj_create_internal (PJ_CONTEXT *ctx, const char *definition) {
 
     /* Support cs2cs-style modifiers */
     ret = cs2cs_emulation_setup  (P);
-    if (0==ret)
-        return proj_destroy (P);
+    if (0==ret) {
+        proj_destroy_with_ctx(ctx, P);
+        return nullptr;
+    }
 
     return P;
 }
@@ -1026,7 +1028,7 @@ static PJ* create_operation_to_geog_crs(PJ_CONTEXT* ctx, const PJ* crs) {
             auto cs = proj_create_ellipsoidal_2D_cs(
                 ctx, PJ_ELLPS2D_LONGITUDE_LATITUDE, nullptr, 0);
             auto ellps = proj_get_ellipsoid(ctx, datum);
-            proj_destroy(datum);
+            proj_destroy_with_ctx(ctx, datum);
             double semi_major_metre = 0;
             double inv_flattening = 0;
             proj_ellipsoid_get_parameters(ctx, ellps, &semi_major_metre,
@@ -1037,9 +1039,9 @@ static PJ* create_operation_to_geog_crs(PJ_CONTEXT* ctx, const PJ* crs) {
                 semi_major_metre, inv_flattening,
                 "Reference prime meridian", 0, nullptr, 0,
                 cs);
-            proj_destroy(ellps);
-            proj_destroy(cs);
-            proj_destroy(geodetic_crs);
+            proj_destroy_with_ctx(ctx, ellps);
+            proj_destroy_with_ctx(ctx, cs);
+            proj_destroy_with_ctx(ctx, geodetic_crs);
             geodetic_crs = temp;
             geodetic_crs_type = proj_get_type(geodetic_crs);
         }
@@ -1048,7 +1050,7 @@ static PJ* create_operation_to_geog_crs(PJ_CONTEXT* ctx, const PJ* crs) {
     {
         // Shouldn't happen
         proj_context_log_debug(ctx, "Cannot find geographic CRS matching CRS");
-        proj_destroy(geodetic_crs);
+        proj_destroy_with_ctx(ctx, geodetic_crs);
         return nullptr;
     }
 
@@ -1061,7 +1063,7 @@ static PJ* create_operation_to_geog_crs(PJ_CONTEXT* ctx, const PJ* crs) {
     auto op_list_to_geodetic = proj_create_operations(
         ctx, geodetic_crs, crs, operation_ctx);
     proj_operation_factory_context_destroy(operation_ctx);
-    proj_destroy(geodetic_crs);
+    proj_destroy_with_ctx(ctx, geodetic_crs);
 
     if( op_list_to_geodetic == nullptr ||
         proj_list_get_count(op_list_to_geodetic) == 0 )
@@ -1105,7 +1107,7 @@ PJ  *proj_create_crs_to_crs (PJ_CONTEXT *ctx, const char *source_crs, const char
         dst = proj_create(ctx, target_crs_modified.c_str());
         if( !dst ) {
             proj_context_log_debug(ctx, "Cannot instantiate target_crs");
-            proj_destroy(src);
+            proj_destroy_with_ctx(ctx, src);
             return nullptr;
         }
     }
@@ -1115,8 +1117,8 @@ PJ  *proj_create_crs_to_crs (PJ_CONTEXT *ctx, const char *source_crs, const char
     }
 
     auto ret = proj_create_crs_to_crs_from_pj(ctx, src, dst, area, nullptr);
-    proj_destroy(src);
-    proj_destroy(dst);
+    proj_destroy_with_ctx(ctx, src);
+    proj_destroy_with_ctx(ctx, dst);
     return ret;
 }
 
@@ -1190,7 +1192,7 @@ PJ  *proj_create_crs_to_crs_from_pj (PJ_CONTEXT *ctx, const PJ *source_crs, cons
         proj_operation_factory_context_destroy(operation_ctx);
         proj_context_log_debug(ctx,
             "Cannot create transformation from geographic CRS of source CRS to source CRS");
-        proj_destroy(P);
+        proj_destroy_with_ctx(ctx, P);
         return nullptr;
     }
 
@@ -1201,8 +1203,8 @@ PJ  *proj_create_crs_to_crs_from_pj (PJ_CONTEXT *ctx, const PJ *source_crs, cons
         proj_operation_factory_context_destroy(operation_ctx);
         proj_context_log_debug(ctx,
             "Cannot create transformation from geographic CRS of target CRS to target CRS");
-        proj_destroy(P);
-        proj_destroy(pjGeogToSrc);
+        proj_destroy_with_ctx(ctx, P);
+        proj_destroy_with_ctx(ctx, pjGeogToSrc);
         return nullptr;
     }
 
@@ -1244,24 +1246,24 @@ PJ  *proj_create_crs_to_crs_from_pj (PJ_CONTEXT *ctx, const PJ *source_crs, cons
                         -180, south_lat, east_lon, north_lat,
                         pjGeogToSrc, pjGeogToDst, isOffshore,
                         P->alternativeCoordinateOperations);
-                    proj_destroy(op_clone);
+                    proj_destroy_with_ctx(ctx, op_clone);
                 }
             }
 
-            proj_destroy(op);
+            proj_destroy_with_ctx(ctx, op);
         }
 
         proj_list_destroy(op_list);
 
         proj_operation_factory_context_destroy(operation_ctx);
-        proj_destroy(pjGeogToSrc);
-        proj_destroy(pjGeogToDst);
+        proj_destroy_with_ctx(ctx, pjGeogToSrc);
+        proj_destroy_with_ctx(ctx, pjGeogToDst);
 
         // If there's finally juste a single result, return it directly
         if( P->alternativeCoordinateOperations.size() == 1 ) {
             auto retP = P->alternativeCoordinateOperations[0].pj;
             P->alternativeCoordinateOperations[0].pj = nullptr;
-            proj_destroy(P);
+            proj_destroy_with_ctx(ctx, P);
             P = retP;
         } else {
             // The returned P is rather dummy
@@ -1280,9 +1282,9 @@ PJ  *proj_create_crs_to_crs_from_pj (PJ_CONTEXT *ctx, const PJ *source_crs, cons
     {
         proj_list_destroy(op_list);
         proj_operation_factory_context_destroy(operation_ctx);
-        proj_destroy(pjGeogToSrc);
-        proj_destroy(pjGeogToDst);
-        proj_destroy(P);
+        proj_destroy_with_ctx(ctx, pjGeogToSrc);
+        proj_destroy_with_ctx(ctx, pjGeogToDst);
+        proj_destroy_with_ctx(ctx, P);
         return nullptr;
     }
 }
@@ -1290,6 +1292,11 @@ PJ  *proj_create_crs_to_crs_from_pj (PJ_CONTEXT *ctx, const PJ *source_crs, cons
 PJ *proj_destroy (PJ *P) {
     pj_free (P);
     return nullptr;
+}
+
+void proj_destroy_with_ctx (PJ_CONTEXT* ctx, PJ *P) {
+    proj_assign_context(P, ctx);
+    pj_free (P);
 }
 
 /*****************************************************************************/

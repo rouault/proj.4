@@ -407,7 +407,7 @@ int main(int argc, char **argv) {
             );
     }
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(nullptr, P);
 
     if (stdout != fout)
         fclose (fout);

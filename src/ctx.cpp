@@ -58,7 +58,9 @@ projCtx pj_get_ctx( projPJ pj )
 void pj_set_ctx( projPJ pj, projCtx ctx )
 
 {
-    if (pj==nullptr)
+    if( ctx == nullptr )
+        ctx = pj_get_default_ctx();
+    if (pj==nullptr || pj->ctx == ctx)
         return;
     pj->ctx = ctx;
     if( pj->reassign_context )

@@ -59,7 +59,7 @@ TEST(gie, cart_selftest) {
     ASSERT_TRUE(P != nullptr);
 
     /* Clean up */
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 
     /* Same projection, now using argc/argv style initialization */
     P = proj_create_argv(PJ_DEFAULT_CTX, 3, const_cast<char **>(args));
@@ -100,7 +100,7 @@ TEST(gie, cart_selftest) {
     proj_errno_reset(P);
 
     /* Clean up */
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 
     /* Now do some 3D transformations */
     P = proj_create(PJ_DEFAULT_CTX, "+proj=cart +ellps=GRS80");
@@ -162,7 +162,7 @@ TEST(gie, cart_selftest) {
 
     /* We go on with the work - now back on the default context */
     b = proj_trans(P, PJ_INV, b);
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 
     /* Testing proj_trans_generic () */
 
@@ -221,7 +221,7 @@ TEST(gie, cart_selftest) {
     ASSERT_EQ(b.lpz.z, coord[1].lpz.z);
 
     /* Clean up  after proj_trans_* tests */
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 }
 
 // ---------------------------------------------------------------------------
@@ -262,15 +262,15 @@ TEST_F(gieTest, proj_create_crs_to_crs) {
     auto src = proj_get_source_crs(PJ_DEFAULT_CTX, P);
     ASSERT_TRUE(src != nullptr);
     EXPECT_EQ(proj_get_name(src), std::string("ETRS89 / UTM zone 32N"));
-    proj_destroy(src);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, src);
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 
     /* we can also allow PROJ strings as a usable PJ */
     P = proj_create_crs_to_crs(PJ_DEFAULT_CTX, "proj=utm +zone=32 +datum=WGS84",
                                "proj=utm +zone=33 +datum=WGS84", NULL);
     ASSERT_TRUE(P != nullptr);
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 
     EXPECT_TRUE(proj_create_crs_to_crs(m_ctxt, "invalid", "EPSG:25833", NULL) ==
                 nullptr);
@@ -297,7 +297,7 @@ TEST_F(gieTest, proj_create_crs_to_crs_EPSG_4326) {
     a = proj_trans(P, PJ_FWD, a);
     EXPECT_NEAR(a.xy.x, b.xy.x, 1e-9);
     EXPECT_NEAR(a.xy.y, b.xy.y, 1e-9);
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 }
 
 // ---------------------------------------------------------------------------
@@ -319,7 +319,7 @@ TEST_F(gieTest, proj_create_crs_to_crs_proj_longlat) {
     a = proj_trans(P, PJ_FWD, a);
     EXPECT_NEAR(a.xy.x, b.xy.x, 1e-9);
     EXPECT_NEAR(a.xy.y, b.xy.y, 1e-9);
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 }
 
 // ---------------------------------------------------------------------------
@@ -370,7 +370,7 @@ TEST(gie, info_functions) {
         P = proj_create(PJ_DEFAULT_CTX,
                         "+proj=august"); /* august has no inverse */
         auto has_inverse = proj_pj_info(P).has_inverse;
-        proj_destroy(P);
+        proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
         ASSERT_FALSE(has_inverse);
     }
 
@@ -381,7 +381,7 @@ TEST(gie, info_functions) {
     ASSERT_EQ(std::string(pj_info.definition), arg);
     ASSERT_EQ(std::string(pj_info.id), "utm");
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 
     /* proj_grid_info() */
     grid_info = proj_grid_info("tests/test_hgrid.tif");
@@ -439,7 +439,7 @@ TEST(gie, info_functions) {
     EXPECT_EQ(factors.meridian_convergence,
               0.0); /* meridian convergence should be 0 */
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 
     /* Check that proj_list_* functions work by looping through them */
     size_t n = 0;
@@ -480,7 +480,7 @@ TEST(gie, io_predicates) {
     ASSERT_TRUE(proj_angular_input(P, PJ_INV));
     ASSERT_TRUE(proj_angular_output(P, PJ_FWD));
     ASSERT_FALSE(proj_angular_output(P, PJ_INV));
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 
     /* angular in and out */
     P = proj_create(PJ_DEFAULT_CTX,
@@ -497,7 +497,7 @@ TEST(gie, io_predicates) {
     ASSERT_TRUE(proj_angular_input(P, PJ_INV));
     ASSERT_TRUE(proj_angular_output(P, PJ_FWD));
     ASSERT_TRUE(proj_angular_output(P, PJ_INV));
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 
     /* linear in and out */
     P = proj_create(PJ_DEFAULT_CTX,
@@ -521,7 +521,7 @@ TEST(gie, io_predicates) {
     /* pj_init_ctx should default to GRS80 */
     ASSERT_EQ(P->a, 6378137.0);
     ASSERT_EQ(P->f, 1.0 / 298.257222101);
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 
     /* Test that pj_fwd* and pj_inv* returns NaNs when receiving NaN input */
     P = proj_create(PJ_DEFAULT_CTX, "+proj=merc +ellps=WGS84");
@@ -535,7 +535,7 @@ TEST(gie, io_predicates) {
     a = proj_trans(P, PJ_INV, a);
     ASSERT_TRUE((std::isnan(a.v[0]) && std::isnan(a.v[1]) &&
                  std::isnan(a.v[2]) && std::isnan(a.v[3])));
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 }
 
 // ---------------------------------------------------------------------------
@@ -646,7 +646,7 @@ TEST(gie, horner_selftest) {
      * direction */
     dist = proj_roundtrip(P, PJ_FWD, 1, &c);
     EXPECT_LE(dist, 0.01);
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 
     /* The complex polynomial transformation between the "System Storebaelt" and
      * utm32/ed50 */
@@ -675,7 +675,7 @@ TEST(gie, horner_selftest) {
     dist = proj_roundtrip(P, PJ_FWD, 1, &a);
     EXPECT_LE(dist, 0.01);
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 }
 
 // ---------------------------------------------------------------------------
@@ -697,13 +697,13 @@ TEST(gie, proj_create_crs_to_crs_PULKOVO42_ETRS89) {
     auto src_crs = proj_get_source_crs(PJ_DEFAULT_CTX, P);
     EXPECT_TRUE(src_crs != nullptr);
     EXPECT_EQ(proj_get_name(src_crs), std::string("Pulkovo 1942(58)"));
-    proj_destroy(src_crs);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, src_crs);
 
     // get target CRS even if the P object is in a dummy state
     auto target_crs = proj_get_target_crs(PJ_DEFAULT_CTX, P);
     EXPECT_TRUE(target_crs != nullptr);
     EXPECT_EQ(proj_get_name(target_crs), std::string("ETRS89"));
-    proj_destroy(target_crs);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, target_crs);
 
     // Romania
     c.xyz.x = 45; // Lat
@@ -755,7 +755,7 @@ TEST(gie, proj_create_crs_to_crs_PULKOVO42_ETRS89) {
               "step proj=unitconvert xy_in=rad "
               "xy_out=deg step proj=axisswap order=2,1");
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 }
 
 // ---------------------------------------------------------------------------
@@ -778,7 +778,7 @@ TEST(gie, proj_create_crs_to_crs_outside_area_of_use) {
     EXPECT_NEAR(c.xy.x, 64.44444444444444, 1e-9); // Lat in grad
     EXPECT_NEAR(c.xy.y, 2.958634259259258, 1e-9); // Long in grad
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 }
 
 // ---------------------------------------------------------------------------
@@ -804,7 +804,7 @@ TEST(gie, proj_trans_generic) {
     EXPECT_NEAR(lat, -60, 1e-9);
     EXPECT_NEAR(lon, 120, 1e-9);
 
-    proj_destroy(P);
+    proj_destroy_with_ctx(PJ_DEFAULT_CTX, P);
 }
 
 } // namespace
