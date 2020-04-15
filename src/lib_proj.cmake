@@ -183,6 +183,7 @@ set(SRC_LIBPROJ_TRANSFORMATIONS
   transformations/molodensky.cpp
   transformations/vgridshift.cpp
   transformations/xyzgridshift.cpp
+  transformations/defmodel.cpp
 )
 
 set(SRC_LIBPROJ_ISO19111

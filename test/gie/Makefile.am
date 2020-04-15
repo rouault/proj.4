@@ -10,7 +10,8 @@ EXTRA_DIST = 4D-API_cs2cs-style.gie \
 	more_builtins.gie \
 	unitconvert.gie \
 	DHDN_ETRS89.gie \
-	geotiff_grids.gie
+	geotiff_grids.gie \
+	defmodel.gie
 
 PROJ_LIB ?= ../../data/for_tests
 
@@ -44,4 +45,7 @@ DHDN_ETRS89: DHDN_ETRS89.gie
 geotiff_grids: geotiff_grids.gie
 	PROJ_SKIP_READ_USER_WRITABLE_DIRECTORY=YES PROJ_LIB=$(PROJ_LIB) $(GIEEXE) $<
 
-check-local: 4D-API-cs2cs-style GDA axisswap builtins deformation ellipsoid more_builtins unitconvert DHDN_ETRS89 geotiff_grids
+defmodel: defmodel.gie
+	PROJ_SKIP_READ_USER_WRITABLE_DIRECTORY=YES PROJ_LIB=$(PROJ_LIB) $(GIEEXE) $<
+
+check-local: 4D-API-cs2cs-style GDA axisswap builtins deformation ellipsoid more_builtins unitconvert DHDN_ETRS89 geotiff_grids defmodel

@@ -11,6 +11,7 @@ proj_add_gie_test("4D-API-cs2cs-style" "gie/4D-API_cs2cs-style.gie")
 proj_add_gie_test("DHDN_ETRS89" "gie/DHDN_ETRS89.gie")
 proj_add_gie_test("Unitconvert" "gie/unitconvert.gie")
 proj_add_gie_test("geotiff_grids" "gie/geotiff_grids.gie")
+proj_add_gie_test("defmodel" "gie/defmodel.gie")
 
 # GIGS tests. Uncommented tests are expected to fail due to issues with
 # various projections. Should be investigated further and fixed.

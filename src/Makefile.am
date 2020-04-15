@@ -195,6 +195,8 @@ libproj_la_SOURCES = \
 	transformations/molodensky.cpp \
 	transformations/vgridshift.cpp \
 	transformations/xyzgridshift.cpp \
+	transformations/defmodel.cpp \
+	transformations/defmodel.hpp \
 	\
 	aasincos.cpp adjlon.cpp \
 	dmstor.cpp auth.cpp \
