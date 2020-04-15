@@ -1,0 +1,56 @@
+
+-------------------------------------------------------------------------------
+===============================================================================
+Test +proj=defmodel
+===============================================================================
+
+<gie>
+
+# Missing +model
+operation   +proj=defmodel
+expect failure errno no_args
+
+# +model doesn't point to an existing file
+operation   +proj=defmodel +model=i_do_not_exist
+expect failure errno invalid_arg
+
+# Not a JSON file
+operation   +proj=defmodel +model=proj.ini
+expect failure errno invalid_arg
+
+# Horizontal deformation with horizontal unit = degree
+operation   +proj=defmodel +model=tests/simple_model_degree_horizontal.json
+tolerance 0.1 mm
+accept 2 49 30 2020
+expect 3 51 30 2020
+roundtrip 1
+
+# 3D deformation with horizontal unit = degree
+operation   +proj=defmodel +model=tests/simple_model_degree_3d.json
+tolerance 0.1 mm
+accept 2 49 30 2020
+expect 3 51 33 2020
+roundtrip 1
+
+# Horizontal deformation with horizontal unit = metre
+operation   +proj=pipeline +step +inv +proj=merc +step +proj=defmodel +model=tests/simple_model_metre_horizontal.json +step +proj=merc
+tolerance 0.1 mm
+accept 10 20 30 2020
+expect 11 22 30 2020
+roundtrip 1
+
+# 3D deformation with horizontal unit = metre
+operation   +proj=pipeline +step +inv +proj=merc +step +proj=defmodel +model=tests/simple_model_metre_3d.json +step +proj=merc
+tolerance 0.1 mm
+accept 10 20 30 2020
+expect 11 22 33 2020
+roundtrip 1
+
+# Test geocentric addition of components
+operation   +proj=pipeline +step +inv +proj=merc +step +proj=defmodel +model=tests/simple_model_metre_3d_geocentric.json +step +proj=merc
+tolerance 0.1 mm
+accept 10 20 30 2020
+expect 11 22 33 2020
+roundtrip 1
+
+</gie>
