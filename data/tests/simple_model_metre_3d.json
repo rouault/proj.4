@@ -8,41 +8,47 @@
   "horizontal_offset_method": "addition",
   "vertical_offset_unit": "metre",
   "extent": {
-    "type": "bbox", 
-    "parameters": [
-      {
-        "bbox": [-180,-90,180,90]
-      }
-    ]
-  }, 
+    "type": "bbox",
+    "parameters": {
+      "bbox": [
+        -180,
+        -90,
+        180,
+        90
+      ]
+    }
+  },
   "time_extent": {
-    "first": "1900-01-01T00:00:00Z", 
+    "first": "1900-01-01T00:00:00Z",
     "last": "2050-01-01T00:00:00Z"
   },
   "components": [
     {
-        "description": "test", 
-        "displacement_type": "3d", 
-        "uncertainty_type": "none", 
-        "extent": {
-            "type": "bbox", 
-            "parameters": [
-            {
-                "bbox": [-180,-90,180,90]
-            }
-            ]
-        }, 
-        "spatial_model": {
-            "type": "GeoTIFF", 
-            "interpolation_method": "bilinear", 
-            "filename": "tests/simple_model_metre_3d_grid.tif"
-        }, 
-        "time_function": {
-            "type": "step", 
-            "parameters": {
-                "step_epoch": "1900-01-01T00:00:00Z"
-            }
+      "description": "test",
+      "displacement_type": "3d",
+      "uncertainty_type": "none",
+      "extent": {
+        "type": "bbox",
+        "parameters": {
+          "bbox": [
+            -180,
+            -90,
+            180,
+            90
+          ]
         }
+      },
+      "spatial_model": {
+        "type": "GeoTIFF",
+        "interpolation_method": "bilinear",
+        "filename": "tests/simple_model_metre_3d_grid.tif"
+      },
+      "time_function": {
+        "type": "step",
+        "parameters": {
+          "step_epoch": "1900-01-01T00:00:00Z"
         }
+      }
+    }
   ]
 }

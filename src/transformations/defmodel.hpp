@@ -1049,12 +1049,7 @@ SpatialExtent SpatialExtent::parse(const json &j) {
         throw ParsingException("unsupported type of extent");
     }
 
-    const json jParameters = getArrayMember(j, "parameters");
-    if (jParameters.size() != 1) {
-        throw ParsingException(
-            "Only one member support in extent.parameters[]");
-    }
-    const json jParameter = jParameters[0];
+    const json jParameter = getObjectMember(j, "parameters");
     const json jBbox = getArrayMember(jParameter, "bbox");
     if (jBbox.size() != 4) {
         throw ParsingException("bbox is not an array of 4 numeric elements");
