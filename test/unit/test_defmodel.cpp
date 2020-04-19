@@ -38,8 +38,8 @@
 // Silence C4702 (unreachable code) due to some dummy implementation of the
 // interfaces of defmodel.hpp
 #ifdef _MSC_VER
-# pragma warning(push)
-# pragma warning(disable:4702)
+#pragma warning(push)
+#pragma warning(disable : 4702)
 #endif
 
 #define PROJ_COMPILATION
@@ -63,8 +63,8 @@ static json getMinValidContent() {
     j["target_crs"] = "EPSG:7907";
     j["definition_crs"] = "EPSG:4959";
     j["extent"]["type"] = "bbox";
-    j["extent"]["parameters"] = {
-        {{"bbox", {modelMinX, modelMinY, modelMaxX, modelMaxY}}}};
+    j["extent"]
+     ["parameters"] = {{"bbox", {modelMinX, modelMinY, modelMaxX, modelMaxY}}};
     j["time_extent"]["first"] = "1900-01-01T00:00:00Z";
     j["time_extent"]["last"] = "2050-01-01T00:00:00Z";
     j["components"] = json::array();
@@ -113,7 +113,7 @@ static json getFullValidContent() {
         {"extent",
          {{"type", "bbox"},
           {"parameters",
-           {{{"bbox", {modelMinX, modelMinY, modelMaxX, modelMaxY}}}}}}},
+           {{"bbox", {modelMinX, modelMinY, modelMaxX, modelMaxY}}}}}},
         {"spatial_model",
          {
              {"type", "GeoTIFF"},
@@ -225,25 +225,25 @@ TEST(defmodel, basic) {
 
     {
         json jcopy(jMinValid);
-        jcopy["extent"]["parameters"][0].erase("bbox");
+        jcopy["extent"]["parameters"].erase("bbox");
         EXPECT_THROW(MasterFile::parse(jcopy.dump()), ParsingException);
     }
 
     {
         json jcopy(jMinValid);
-        jcopy["extent"]["parameters"][0]["bbox"] = "foo";
+        jcopy["extent"]["parameters"]["bbox"] = "foo";
         EXPECT_THROW(MasterFile::parse(jcopy.dump()), ParsingException);
     }
 
     {
         json jcopy(jMinValid);
-        jcopy["extent"]["parameters"][0]["bbox"] = {0, 1, 2};
+        jcopy["extent"]["parameters"]["bbox"] = {0, 1, 2};
         EXPECT_THROW(MasterFile::parse(jcopy.dump()), ParsingException);
     }
 
     {
         json jcopy(jMinValid);
-        jcopy["extent"]["parameters"][0]["bbox"] = {0, 1, 2, "foo"};
+        jcopy["extent"]["parameters"]["bbox"] = {0, 1, 2, "foo"};
         EXPECT_THROW(MasterFile::parse(jcopy.dump()), ParsingException);
     }
 
@@ -680,7 +680,7 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
          {"extent",
           {{"type", "bbox"},
            {"parameters",
-            {{{"bbox", {gridMinX, gridMinY, gridMaxX, gridMaxY}}}}}}},
+            {{"bbox", {gridMinX, gridMinY, gridMaxX, gridMaxY}}}}}},
          {"spatial_model",
           {
               {"type", "GeoTIFF"},
@@ -1042,9 +1042,9 @@ TEST(defmodel, evaluator_horizontal_unit_metre) {
          {"extent",
           {{"type", "bbox"},
            {"parameters",
-            {{{"bbox",
-               {gridMinX - extraPointX * gridResX,
-                gridMinY - extraPointY * gridResY, gridMaxX, gridMaxY}}}}}}},
+            {{"bbox",
+              {gridMinX - extraPointX * gridResX,
+               gridMinY - extraPointY * gridResY, gridMaxX, gridMaxY}}}}}},
          {"spatial_model",
           {
               {"type", "GeoTIFF"},
@@ -1349,5 +1349,5 @@ TEST(defmodel, evaluator_horizontal_unit_metre) {
 } // namespace
 
 #ifdef _MSC_VER
-# pragma warning(pop)
+#pragma warning(pop)
 #endif
