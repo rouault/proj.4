@@ -210,7 +210,10 @@ class Component {
       protected:
         TimeFunction() = default;
     };
+    struct ConstantTimeFunction : public TimeFunction {
 
+        virtual double evaluateAt(double dt) const override;
+    };
     struct VelocityTimeFunction : public TimeFunction {
         /** Date/time at which the velocity function is zero. */
         Epoch referenceEpoch{};
@@ -1109,7 +1112,11 @@ Component Component::parse(const json &j) {
     const std::string timeFunctionType = getReqString(jTimeFunction, "type");
     const json jParameters = getObjectMember(jTimeFunction, "parameters");
 
-    if (timeFunctionType == "velocity") {
+    if (timeFunctionType == "constant") {
+        std::unique_ptr<ConstantTimeFunction> tf(new ConstantTimeFunction());
+        tf->type = timeFunctionType;
+        comp.mTimeFunction = std::move(tf);
+    } else if (timeFunctionType == "velocity") {
         std::unique_ptr<VelocityTimeFunction> tf(new VelocityTimeFunction());
         tf->type = timeFunctionType;
         tf->referenceEpoch =
@@ -1175,6 +1182,12 @@ Component Component::parse(const json &j) {
     }
 
     return comp;
+}
+
+// ---------------------------------------------------------------------------
+
+double Component::ConstantTimeFunction::evaluateAt(double) const {
+    return 1.0;
 }
 
 // ---------------------------------------------------------------------------
