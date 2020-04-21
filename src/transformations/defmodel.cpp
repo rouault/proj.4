@@ -69,7 +69,8 @@ struct Grid : public GridConcept {
             const auto samplesPerPixel = realGrid->samplesPerPixel();
             if (samplesPerPixel < 2) {
                 pj_log(ctx, PJ_LOG_ERROR,
-                       "defmodel: grid has not enough samples");
+                       "defmodel: grid %s has not enough samples",
+                       realGrid->name().c_str());
                 return false;
             }
             bool foundDescX = false;
@@ -89,16 +90,17 @@ struct Grid : public GridConcept {
                 }
             }
             if (foundDesc && (!foundDescX || !foundDescY)) {
-                pj_log(ctx, PJ_LOG_ERROR, "defmodel: Found band description, "
-                                          "but not the ones expected");
+                pj_log(ctx, PJ_LOG_ERROR,
+                       "defmodel: grid %s : Found band description, "
+                       "but not the ones expected",
+                       realGrid->name().c_str());
                 return false;
             }
             const auto unit = realGrid->unit(sampleX);
             if (!unit.empty() && unit != expectedUnit) {
-                pj_log(ctx, PJ_LOG_ERROR,
-                       ("defmodel: Only unit=" + expectedUnit +
-                        " currently handled for this mode")
-                           .c_str());
+                pj_log(ctx, PJ_LOG_ERROR, "defmodel: grid %s : Only unit=%s "
+                                          "currently handled for this mode",
+                       realGrid->name().c_str(), expectedUnit.c_str());
                 return false;
             }
             checkedHorizontal = true;
@@ -125,9 +127,12 @@ struct Grid : public GridConcept {
     bool getZOffset(int ix, int iy, double &zOffset) const {
         if (!checkedVertical) {
             const auto samplesPerPixel = realGrid->samplesPerPixel();
-            if (samplesPerPixel < 3) {
+            if (samplesPerPixel == 1) {
+                sampleZ = 0;
+            } else if (samplesPerPixel < 3) {
                 pj_log(ctx, PJ_LOG_ERROR,
-                       "defmodel: grid has not enough samples");
+                       "defmodel: grid %s has not enough samples",
+                       realGrid->name().c_str());
                 return false;
             }
             bool foundDesc = false;
@@ -143,14 +148,18 @@ struct Grid : public GridConcept {
                 }
             }
             if (foundDesc && !foundDescZ) {
-                pj_log(ctx, PJ_LOG_ERROR, "defmodel: Found band description, "
-                                          "but not the ones expected");
+                pj_log(ctx, PJ_LOG_ERROR,
+                       "defmodel: grid %s : Found band description, "
+                       "but not the ones expected",
+                       realGrid->name().c_str());
                 return false;
             }
             const auto unit = realGrid->unit(sampleZ);
             if (!unit.empty() && unit != STR_METRE) {
-                pj_log(ctx, PJ_LOG_ERROR, "defmodel: Only unit=metre currently "
-                                          "handled for this mode");
+                pj_log(ctx, PJ_LOG_ERROR,
+                       "defmodel: grid %s : Only unit=metre currently "
+                       "handled for this mode",
+                       realGrid->name().c_str());
                 return false;
             }
             checkedVertical = true;
