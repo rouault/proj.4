@@ -29,6 +29,8 @@
  * https://docs.google.com/document/d/1wiyrAmzqh8MZlzHSp3wf594Ob_M1LeFtDA5swuzvLZY
  * It is written in a generic way, independent of the rest of PROJ
  * infrastructure.
+ *
+ * Verbose debugging info can be turned on by setting the DEBUG_DEFMODEL macro
  */
 
 #ifndef DEFMODEL_HPP
@@ -544,6 +546,12 @@ struct GridConcept {
                getZOffset(ix, iy, zOffset);
 #endif
     }
+
+#ifdef DEBUG_DEFMODEL
+    std::string name() const {
+        throw UnimplementedException("name() unimplemented");
+    }
+#endif
 };
 
 // ---------------------------------------------------------------------------
@@ -582,6 +590,12 @@ struct EvaluatorIfaceConcept {
                                 double & /* height*/) {
         throw UnimplementedException("geocentricToGeographic unimplemented");
     }
+
+#ifdef DEBUG_DEFMODEL
+    void log(const std::string & /* msg */) {
+        throw UnimplementedException("log unimplemented");
+    }
+#endif
 };
 
 // ---------------------------------------------------------------------------
@@ -1314,6 +1328,24 @@ void Evaluator<Grid, GridSet, EvaluatorIface>::clearGridCache() {
 
 // ---------------------------------------------------------------------------
 
+#ifdef DEBUG_DEFMODEL
+
+static std::string shortName(const Component &comp) {
+    const auto &desc = comp.description();
+    return desc.substr(0, desc.find('\n')) + " (" +
+           comp.spatialModel().filename + ")";
+}
+
+static std::string toString(double val) {
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%.9g", val);
+    return buffer;
+}
+
+#endif
+
+// ---------------------------------------------------------------------------
+
 template <class Grid, class GridSet, class EvaluatorIface>
 bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
     EvaluatorIface &iface, double x, double y, double z, double t,
@@ -1366,12 +1398,27 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
         const auto &extent = comp.extent();
         if (x < extent.minxRad() - EPS || x > extent.maxxRad() + EPS ||
             y < extent.minyRad() - EPS || y > extent.maxyRad() + EPS) {
+#ifdef DEBUG_DEFMODEL
+            iface.log(
+                "Skipping component " + shortName(comp) +
+                " due to point being outside of its declared spatial extent.");
+#endif
             continue;
         }
         const auto tfactor = compEx.evaluateAt(t);
         if (tfactor == 0.0) {
+#ifdef DEBUG_DEFMODEL
+            iface.log("Skipping component " + shortName(comp) +
+                      " due to time function evaluating to 0.");
+#endif
             continue;
         }
+
+#ifdef DEBUG_DEFMODEL
+        iface.log("Entering component " + shortName(comp) +
+                  " with time function evaluating to " + toString(tfactor) +
+                  ".");
+#endif
 
         if (compEx.gridSet == nullptr) {
             compEx.gridSet = iface.open(comp.spatialModel().filename);
@@ -1381,6 +1428,10 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
         }
         const Grid *grid = compEx.gridSet->gridAt(x, y);
         if (grid == nullptr) {
+#ifdef DEBUG_DEFMODEL
+            iface.log("Skipping component " + shortName(comp) +
+                      " due to no grid found for this point in the grid set.");
+#endif
             continue;
         }
         if (grid->width < 2 || grid->height < 2) {
@@ -1390,6 +1441,12 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
         const double iy_d = (y - grid->minyRad) / grid->resyRad;
         if (ix_d < -EPS || iy_d < -EPS || ix_d + 1 >= grid->width + EPS ||
             iy_d + 1 >= grid->height + EPS) {
+#ifdef DEBUG_DEFMODEL
+            iface.log("Skipping component " + shortName(comp) +
+                      " due to point being outside of actual spatial extent of "
+                      "grid " +
+                      grid->name() + ".");
+#endif
             continue;
         }
         const int ix0 = std::min(static_cast<int>(ix_d), grid->width - 2);
@@ -1416,7 +1473,13 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
                 !grid->getZOffset(ix1, iy1, dz11)) {
                 return false;
             }
-            dz += tfactor * (dz00 * m00 + dz01 * m01 + dz10 * m10 + dz11 * m11);
+            const double dzInterp =
+                dz00 * m00 + dz01 * m01 + dz10 * m10 + dz11 * m11;
+#ifdef DEBUG_DEFMODEL
+            iface.log("tfactor * dzInterp = " + toString(tfactor) + " * " +
+                      toString(dzInterp) + ".");
+#endif
+            dz += tfactor * dzInterp;
         } else if (mIsHorizontalUnitDegree) {
             double dx00 = 0;
             double dy00 = 0;
@@ -1444,13 +1507,26 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
                     !grid->getLonLatZOffset(ix1, iy1, dx11, dy11, dz11)) {
                     return false;
                 }
-                dz += tfactor *
-                      (dz00 * m00 + dz01 * m01 + dz10 * m10 + dz11 * m11);
+                const double dzInterp =
+                    dz00 * m00 + dz01 * m01 + dz10 * m10 + dz11 * m11;
+#ifdef DEBUG_DEFMODEL
+                iface.log("tfactor * dzInterp = " + toString(tfactor) + " * " +
+                          toString(dzInterp) + ".");
+#endif
+                dz += tfactor * dzInterp;
             }
-            dlam +=
-                tfactor * (dx00 * m00 + dx01 * m01 + dx10 * m10 + dx11 * m11);
-            dphi +=
-                tfactor * (dy00 * m00 + dy01 * m01 + dy10 * m10 + dy11 * m11);
+            const double dlamInterp =
+                dx00 * m00 + dx01 * m01 + dx10 * m10 + dx11 * m11;
+            const double dphiInterp =
+                dy00 * m00 + dy01 * m01 + dy10 * m10 + dy11 * m11;
+#ifdef DEBUG_DEFMODEL
+            iface.log("tfactor * dlamInterp = " + toString(tfactor) + " * " +
+                      toString(dlamInterp) + ".");
+            iface.log("tfactor * dphiInterp = " + toString(tfactor) + " * " +
+                      toString(dphiInterp) + ".");
+#endif
+            dlam += tfactor * dlamInterp;
+            dphi += tfactor * dphiInterp;
         } else /* horizontal unit is metre */ {
             double de00 = 0;
             double dn00 = 0;
@@ -1482,14 +1558,27 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
                                                      dz11)) {
                     return false;
                 }
-                dz += tfactor *
-                      (dz00 * m00 + dz01 * m01 + dz10 * m10 + dz11 * m11);
+                const double dzInterp =
+                    dz00 * m00 + dz01 * m01 + dz10 * m10 + dz11 * m11;
+#ifdef DEBUG_DEFMODEL
+                iface.log("tfactor * dzInterp = " + toString(tfactor) + " * " +
+                          toString(dzInterp) + ".");
+#endif
+                dz += tfactor * dzInterp;
             }
             if (compEx.isBilinearInterpolation) {
-                de += tfactor *
-                      (de00 * m00 + de01 * m01 + de10 * m10 + de11 * m11);
-                dn += tfactor *
-                      (dn00 * m00 + dn01 * m01 + dn10 * m10 + dn11 * m11);
+                const double deInterp =
+                    de00 * m00 + de01 * m01 + de10 * m10 + de11 * m11;
+                const double dnInterp =
+                    dn00 * m00 + dn01 * m01 + dn10 * m10 + dn11 * m11;
+#ifdef DEBUG_DEFMODEL
+                iface.log("tfactor * deInterp = " + toString(tfactor) + " * " +
+                          toString(deInterp) + ".");
+                iface.log("tfactor * dnInterp = " + toString(tfactor) + " * " +
+                          toString(dnInterp) + ".");
+#endif
+                de += tfactor * deInterp;
+                dn += tfactor * dnInterp;
             } else /* geocentric_bilinear */ {
                 double dX;
                 double dY;
@@ -1532,9 +1621,19 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
 
                 // Convert back from geocentric deltas to easting, northing
                 // deltas
-                de += tfactor * (-dX * sinlam + dY * coslam);
-                dn += tfactor *
-                      ((-dX * coslam - dY * sinlam) * sinphi + dZ * cosphi);
+                const double deInterp = -dX * sinlam + dY * coslam;
+                const double dnInterp =
+                    (-dX * coslam - dY * sinlam) * sinphi + dZ * cosphi;
+#ifdef DEBUG_DEFMODEL
+                iface.log("After geocentric_bilinear interpolation: tfactor * "
+                          "deInterp = " +
+                          toString(tfactor) + " * " + toString(deInterp) + ".");
+                iface.log("After geocentric_bilinear interpolation: tfactor * "
+                          "dnInterp = " +
+                          toString(tfactor) + " * " + toString(dnInterp) + ".");
+#endif
+                de += tfactor * deInterp;
+                dn += tfactor * dnInterp;
             }
         }
     }
@@ -1545,6 +1644,10 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
         x_out += dlam;
         y_out += dphi;
     } else {
+#ifdef DEBUG_DEFMODEL
+        iface.log("Total sum of de: " + toString(de));
+        iface.log("Total sum of dn: " + toString(dn));
+#endif
         if (mIsAddition) {
             // Simple way of adding the offset
             if (!sincosphiInitialized) {
@@ -1552,6 +1655,10 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
             }
             DeltaEastingNorthingToLongLat(cosphi, de, dn, mA, mB, mEs, dlam,
                                           dphi);
+#ifdef DEBUG_DEFMODEL
+            iface.log("Result dlam: " + toString(dlam));
+            iface.log("Result dphi: " + toString(dphi));
+#endif
             x_out += dlam;
             y_out += dphi;
         } else {
@@ -1571,9 +1678,20 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
             double Y;
             double Z;
             iface.geographicToGeocentric(x, y, 0, mA, mB, mEs, X, Y, Z);
+#ifdef DEBUG_DEFMODEL
+            iface.log("Geocentric coordinate before: " + toString(X) + "," +
+                      toString(Y) + "," + toString(Z));
+            iface.log("Geocentric shift: " + toString(dX) + "," + toString(dY) +
+                      "," + toString(dZ));
+#endif
             X += dX;
             Y += dY;
             Z += dZ;
+#ifdef DEBUG_DEFMODEL
+            iface.log("Geocentric coordinate after: " + toString(X) + "," +
+                      toString(Y) + "," + toString(Z));
+#endif
+
             double h_out_ignored;
             iface.geocentricToGeographic(X, Y, Z, mA, mB, mEs, x_out, y_out,
                                          h_out_ignored);

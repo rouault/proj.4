@@ -772,6 +772,10 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
             return getLonLatOffset(ix, iy, lonOffsetRadian, latOffsetRadian) &&
                    getZOffset(ix, iy, zOffset);
         }
+
+#ifdef DEBUG_DEFMODEL
+        std::string name() const { return std::string(); }
+#endif
     };
 
     struct GridSet : public GridSetConcept<Grid> {
@@ -798,6 +802,10 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
                 return nullptr;
             return std::unique_ptr<GridSet>(new GridSet());
         }
+
+#ifdef DEBUG_DEFMODEL
+        void log(const std::string & /* msg */) {}
+#endif
     };
 
     EvaluatorIface iface;
@@ -1138,6 +1146,10 @@ TEST(defmodel, evaluator_horizontal_unit_metre) {
                                             northingOffset) &&
                    getZOffset(ix, iy, zOffset);
         }
+
+#ifdef DEBUG_DEFMODEL
+        std::string name() const { return std::string(); }
+#endif
     };
 
     struct GridSet : public GridSetConcept<Grid> {
@@ -1162,6 +1174,10 @@ TEST(defmodel, evaluator_horizontal_unit_metre) {
                 return nullptr;
             return std::unique_ptr<GridSet>(new GridSet());
         }
+
+#ifdef DEBUG_DEFMODEL
+        void log(const std::string & /* msg */) {}
+#endif
 
         void geographicToGeocentric(double lam, double phi, double height,
                                     double a, double /*b*/, double es,

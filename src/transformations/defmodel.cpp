@@ -199,6 +199,10 @@ struct Grid : public GridConcept {
                getZOffset(ix, iy, zOffset);
     }
 
+#ifdef DEBUG_DEFMODEL
+    std::string name() const { return realGrid->name(); }
+#endif
+
   private:
     Grid(const Grid &) = delete;
     Grid &operator=(const Grid &) = delete;
@@ -293,6 +297,12 @@ struct EvaluatorIface : public EvaluatorIfaceConcept<Grid, GridSet> {
         phi = lpz.phi;
         height = lpz.z;
     }
+
+#ifdef DEBUG_DEFMODEL
+    void log(const std::string &msg) {
+        pj_log(ctx, PJ_LOG_TRACE, "%s", msg.c_str());
+    }
+#endif
 
   private:
     EvaluatorIface(const EvaluatorIface &) = delete;
