@@ -74,11 +74,12 @@ static json getMinValidContent() {
 
 // ---------------------------------------------------------------------------
 
-constexpr int IDX_VELOCITY = 0;
-constexpr int IDX_STEP = 1;
-constexpr int IDX_REVERSE_STEP = 2;
-constexpr int IDX_PIECEWISE = 3;
-constexpr int IDX_EXPONENTIAL = 4;
+constexpr int IDX_CONSTANT = 0;
+constexpr int IDX_VELOCITY = 1;
+constexpr int IDX_STEP = 2;
+constexpr int IDX_REVERSE_STEP = 3;
+constexpr int IDX_PIECEWISE = 4;
+constexpr int IDX_EXPONENTIAL = 5;
 
 static json getFullValidContent() {
     json j(getMinValidContent());
@@ -123,10 +124,16 @@ static json getFullValidContent() {
          }},
         {"time_function",
          {
-             {"type", "velocity"},
-             {"parameters", {{"reference_epoch", "2000-01-01T00:00:00Z"}}},
+             {"type", "constant"},
+             {"parameters", json::object()},
          }},
     }};
+
+    j["components"].push_back(j["components"][0]);
+    j["components"][IDX_VELOCITY]["time_function"] = {
+        {"type", "velocity"},
+        {"parameters", {{"reference_epoch", "2000-01-01T00:00:00Z"}}},
+    };
 
     j["components"].push_back(j["components"][0]);
     j["components"][IDX_STEP]["time_function"] = {
@@ -294,9 +301,9 @@ TEST(defmodel, full) {
     EXPECT_EQ(mf->verticalUncertaintyType(), "95% confidence limit");
     EXPECT_EQ(mf->verticalUncertaintyUnit(), "metre");
     EXPECT_EQ(mf->horizontalOffsetMethod(), "addition");
-    ASSERT_EQ(mf->components().size(), 5U);
+    ASSERT_EQ(mf->components().size(), 6U);
     {
-        const auto &comp = mf->components()[IDX_VELOCITY];
+        const auto &comp = mf->components()[IDX_CONSTANT];
         EXPECT_EQ(comp.description(), "description");
         EXPECT_EQ(comp.displacementType(), "horizontal");
         EXPECT_EQ(comp.uncertaintyType(), "none");
@@ -311,6 +318,11 @@ TEST(defmodel, full) {
         EXPECT_EQ(comp.spatialModel().filename, "nzgd2000-ndm-grid02.tif");
         EXPECT_EQ(comp.spatialModel().md5Checksum,
                   "49fce8ab267be2c8d00d43683060a032");
+        ASSERT_NE(comp.timeFunction(), nullptr);
+        ASSERT_EQ(comp.timeFunction()->type, "constant");
+    }
+    {
+        const auto &comp = mf->components()[IDX_VELOCITY];
         ASSERT_NE(comp.timeFunction(), nullptr);
         ASSERT_EQ(comp.timeFunction()->type, "velocity");
         const auto velocity =
@@ -389,14 +401,14 @@ TEST(defmodel, error_cases) {
 
     {
         json jcopy(jFullValid);
-        jcopy["components"][IDX_VELOCITY]["spatial_model"]
+        jcopy["components"][IDX_CONSTANT]["spatial_model"]
              ["interpolation_method"] = "unsupported";
         EXPECT_THROW(MasterFile::parse(jcopy.dump()), ParsingException);
     }
 
     {
         json jcopy(jFullValid);
-        jcopy["components"][IDX_VELOCITY]["displacement_type"] = "unsupported";
+        jcopy["components"][IDX_CONSTANT]["displacement_type"] = "unsupported";
         EXPECT_THROW(MasterFile::parse(jcopy.dump()), ParsingException);
     }
 
@@ -492,6 +504,17 @@ TEST(defmodel, ISO8601ToDecimalYear) {
                  ParsingException);
     EXPECT_THROW(ISO8601ToDecimalYear("2000-01-01T00:00:61Z"),
                  ParsingException);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(defmodel, evaluate_constant) {
+    const auto jFullValid(getFullValidContent());
+    const auto mf = MasterFile::parse(jFullValid.dump());
+    const auto &comp = mf->components()[IDX_CONSTANT];
+    EXPECT_EQ(comp.timeFunction()->evaluateAt(1999.0), 1.0);
+    EXPECT_EQ(comp.timeFunction()->evaluateAt(2000.0), 1.0);
+    EXPECT_EQ(comp.timeFunction()->evaluateAt(2001.0), 1.0);
 }
 
 // ---------------------------------------------------------------------------
