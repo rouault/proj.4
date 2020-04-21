@@ -329,6 +329,9 @@
       "description": "Function describing a multiplicative factor to apply to the spatial_model depending on the time",
       "oneOf": [
         {
+          "$ref": "#/definitions/time_function_constant"
+        },
+        {
           "$ref": "#/definitions/time_function_velocity"
         },
         {
@@ -344,6 +347,22 @@
           "$ref": "#/definitions/time_function_exponential"
         }
       ]
+    },
+    "time_function_constant": {
+      "description": "The valuation of this function is 1 at any epoch",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "constant"
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
     },
     "time_function_velocity": {
       "description": "The valuation of this function is 0 at reference_epoch, and proportional to the time difference to it at other times",
