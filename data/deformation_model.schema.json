@@ -357,6 +357,12 @@
           "enum": [
             "constant"
           ]
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+          },
+          "additionalProperties": false
         }
       },
       "required": [

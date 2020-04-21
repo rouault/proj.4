@@ -1110,7 +1110,9 @@ Component Component::parse(const json &j) {
 
     const json jTimeFunction = getObjectMember(j, "time_function");
     const std::string timeFunctionType = getReqString(jTimeFunction, "type");
-    const json jParameters = getObjectMember(jTimeFunction, "parameters");
+    const json jParameters = timeFunctionType == "constant"
+                                 ? json()
+                                 : getObjectMember(jTimeFunction, "parameters");
 
     if (timeFunctionType == "constant") {
         std::unique_ptr<ConstantTimeFunction> tf(new ConstantTimeFunction());
