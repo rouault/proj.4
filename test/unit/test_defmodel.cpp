@@ -124,8 +124,7 @@ static json getFullValidContent() {
          }},
         {"time_function",
          {
-             {"type", "constant"},
-             {"parameters", json::object()},
+             {"type", "constant"}, {"parameters", json::object()},
          }},
     }};
 

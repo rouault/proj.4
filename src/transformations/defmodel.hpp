@@ -1186,9 +1186,7 @@ Component Component::parse(const json &j) {
 
 // ---------------------------------------------------------------------------
 
-double Component::ConstantTimeFunction::evaluateAt(double) const {
-    return 1.0;
-}
+double Component::ConstantTimeFunction::evaluateAt(double) const { return 1.0; }
 
 // ---------------------------------------------------------------------------
 
