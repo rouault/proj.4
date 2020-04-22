@@ -46,15 +46,6 @@ matrix:
         - TIFF_LIBS="-L/usr/lib/i386-linux-gnu -ltiff"
         - SQLITE3_CFLAGS=-I/usr/include/i386-linux-gnu
         - SQLITE3_LIBS="-L/usr/lib/i386-linux-gnu -lsqlite3"
-      addons:
-        apt:
-          sources:
-            - sourceline: 'ppa:ubuntu-toolchain-r/test'
-          packages:
-            - g++-8-multilib
-            - make
-            - autoconf
-            - automake
 
     - os: linux
       dist: xenial
