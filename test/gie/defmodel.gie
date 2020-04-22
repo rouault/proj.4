@@ -4,7 +4,7 @@
 Test +proj=defmodel
 ===============================================================================
 
-<gie>
+<gie-strict>
 
 # Missing +model
 operation   +proj=defmodel
@@ -60,4 +60,4 @@ accept 2 49 30 2020
 expect 2 49 33 2020
 roundtrip 1
 
-</gie>
+</gie-strict>
