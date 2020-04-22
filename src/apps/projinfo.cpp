@@ -479,8 +479,8 @@ static void outputObject(
                     std::cout << "WKT1:GDAL string:" << std::endl;
                 }
 
-                auto formatter =
-                    WKTFormatter::create(WKTFormatter::Convention::WKT1_GDAL);
+                auto formatter = WKTFormatter::create(
+                    WKTFormatter::Convention::WKT1_GDAL, dbContext);
                 if (outputOpt.singleLine) {
                     formatter->setMultiLine(false);
                 }
@@ -1074,7 +1074,7 @@ int main(int argc, char **argv) {
 #ifdef CURL_ENABLED
             if (proj_context_is_network_enabled(nullptr)) {
                 std::cout << "Status: enabled" << std::endl;
-                std::cout << "URL: " << pj_context_get_url_endpoint(nullptr)
+                std::cout << "URL: " << proj_context_get_url_endpoint(nullptr)
                           << std::endl;
             } else {
                 std::cout << "Status: disabled" << std::endl;
