@@ -858,7 +858,7 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
         const double lon = modelMinX - 1e-1;
         const double lat = gridMinY + iQueriedY * gridResY;
         EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 tValid, newLon, newLat, newZ));
+                                  tValid, newLon, newLat, newZ));
     }
 
     // Longitude > model max
@@ -866,7 +866,7 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
         const double lon = modelMaxX + 1e-1;
         const double lat = gridMinY + iQueriedY * gridResY;
         EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 tValid, newLon, newLat, newZ));
+                                  tValid, newLon, newLat, newZ));
     }
 
     // Latitude < model min
@@ -874,7 +874,7 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
         const double lon = gridMinX + iQueriedX * gridResX;
         const double lat = modelMinY - 1e-1;
         EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 tValid, newLon, newLat, newZ));
+                                  tValid, newLon, newLat, newZ));
     }
 
     // Latitude > model max
@@ -882,7 +882,7 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
         const double lon = gridMinX + iQueriedX * gridResX;
         const double lat = modelMaxY + 1e-1;
         EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 tValid, newLon, newLat, newZ));
+                                  tValid, newLon, newLat, newZ));
     }
 
     // Before timeExtent.first
@@ -890,7 +890,7 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
         const double lon = gridMinX + iQueriedX * gridResX;
         const double lat = gridMinY + iQueriedY * gridResY;
         EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 1000, newLon, newLat, newZ));
+                                  1000, newLon, newLat, newZ));
     }
 
     // After timeExtent.last
@@ -898,7 +898,7 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
         const double lon = gridMinX + iQueriedX * gridResX;
         const double lat = gridMinY + iQueriedY * gridResY;
         EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 3000, newLon, newLat, newZ));
+                                  3000, newLon, newLat, newZ));
     }
 
     // Longitude < grid min

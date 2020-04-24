@@ -1362,17 +1362,22 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
     // longitude to match
     {
         const auto &extent = mModel->extent();
-        if( true ) // NOTE: Should test grid definition CRS is geographic, ? from iface
+        if (true) // NOTE: Should test grid definition CRS is geographic, ? from
+                  // iface
         {
-            while( x < extent.minxRad() - EPS ){ x += 2.0*M_PI; }
-            while( x > extent.maxxRad() + EPS ){ x -= 2.0*M_PI; }
+            while (x < extent.minxRad() - EPS) {
+                x += 2.0 * M_PI;
+            }
+            while (x > extent.maxxRad() + EPS) {
+                x -= 2.0 * M_PI;
+            }
         }
         if (x < extent.minxRad() - EPS || x > extent.maxxRad() + EPS ||
             y < extent.minyRad() - EPS || y > extent.maxyRad() + EPS) {
 #ifdef DEBUG_DEFMODEL
-            iface.log("Calculation point "+toString(x)+","+toString(y)
-                +" is outside the extents of the deformation model");
-#endif                
+            iface.log("Calculation point " + toString(x) + "," + toString(y) +
+                      " is outside the extents of the deformation model");
+#endif
             return false;
         }
     }
@@ -1383,9 +1388,9 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
         if (t < timeExtent.first.toDecimalYear() ||
             t > timeExtent.last.toDecimalYear()) {
 #ifdef DEBUG_DEFMODEL
-            iface.log("Calculation epoch "+toString(t)
-                +" is not valid for the deformation model");
-#endif                
+            iface.log("Calculation epoch " + toString(t) +
+                      " is not valid for the deformation model");
+#endif
             return false;
         }
     }
@@ -1712,8 +1717,8 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
         }
     }
 #ifdef DEBUG_DEFMODEL
-        iface.log("Total sum of dz: " + toString(dz));
-#endif    
+    iface.log("Total sum of dz: " + toString(dz));
+#endif
     z_out += dz;
 
     return true;
