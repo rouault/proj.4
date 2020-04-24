@@ -600,6 +600,7 @@ struct EvaluatorIfaceConcept {
 
 // ---------------------------------------------------------------------------
 
+constexpr double DEFMODEL_PI = 3.14159265358979323846;
 constexpr double DEG_TO_RAD_CONSTANT = 3.14159265358979323846 / 180.;
 inline constexpr double DegToRad(double d) { return d * DEG_TO_RAD_CONSTANT; }
 
@@ -1222,7 +1223,7 @@ double Component::StepTimeFunction::evaluateAt(double dt) const {
 
 double Component::ReverseStepTimeFunction::evaluateAt(double dt) const {
     if (dt < stepEpoch.toDecimalYear())
-        return 1.0;
+        return -1.0;
     return 0.0;
 }
 
@@ -1358,21 +1359,40 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
 
     constexpr double EPS = 1e-10;
 
-    // Check against global model spatial extent
+    // Check against global model spatial extent, potentially wrapping
+    // longitude to match
     {
         const auto &extent = mModel->extent();
+        if (true) // NOTE: Should test grid definition CRS is geographic, ? from
+                  // iface
+        {
+            while (x < extent.minxRad() - EPS) {
+                x += 2.0 * DEFMODEL_PI;
+            }
+            while (x > extent.maxxRad() + EPS) {
+                x -= 2.0 * DEFMODEL_PI;
+            }
+        }
         if (x < extent.minxRad() - EPS || x > extent.maxxRad() + EPS ||
             y < extent.minyRad() - EPS || y > extent.maxyRad() + EPS) {
-            return true;
+#ifdef DEBUG_DEFMODEL
+            iface.log("Calculation point " + toString(x) + "," + toString(y) +
+                      " is outside the extents of the deformation model");
+#endif
+            return false;
         }
     }
 
-    // Check against global model temoral extent
+    // Check against global model temporal extent
     {
         const auto &timeExtent = mModel->timeExtent();
         if (t < timeExtent.first.toDecimalYear() ||
             t > timeExtent.last.toDecimalYear()) {
-            return true;
+#ifdef DEBUG_DEFMODEL
+            iface.log("Calculation epoch " + toString(t) +
+                      " is not valid for the deformation model");
+#endif
+            return false;
         }
     }
 
@@ -1697,6 +1717,9 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
                                          h_out_ignored);
         }
     }
+#ifdef DEBUG_DEFMODEL
+    iface.log("Total sum of dz: " + toString(dz));
+#endif
     z_out += dz;
 
     return true;

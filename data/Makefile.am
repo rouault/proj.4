@@ -108,6 +108,12 @@ EXTRA_DIST = proj.ini GL27 nad.lst nad27 nad83 \
 		tests/simple_model_metre_3d_geocentric.json \
 		tests/simple_model_metre_vertical_grid.tif \
 		tests/simple_model_metre_vertical.json \
+		tests/simple_model_polar.json \
+		tests/simple_model_polar.tif \
+		tests/simple_model_wrap_east.json \
+		tests/simple_model_wrap_east.tif \
+		tests/simple_model_wrap_west.json \
+		tests/simple_model_wrap_west.tif \
 		generate_all_sql_in.cmake sql_filelist.cmake \
 		$(SQL_ORDERED_LIST)
 

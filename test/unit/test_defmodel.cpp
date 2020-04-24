@@ -544,7 +544,7 @@ TEST(defmodel, evaluate_reverse_step) {
     const auto jFullValid(getFullValidContent());
     const auto mf = MasterFile::parse(jFullValid.dump());
     const auto &comp = mf->components()[IDX_REVERSE_STEP];
-    EXPECT_EQ(comp.timeFunction()->evaluateAt(1999.99), 1.0);
+    EXPECT_EQ(comp.timeFunction()->evaluateAt(1999.99), -1.0);
     EXPECT_EQ(comp.timeFunction()->evaluateAt(2000.00), 0.0);
     EXPECT_EQ(comp.timeFunction()->evaluateAt(2000.01), 0.0);
 }
@@ -857,66 +857,48 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
     {
         const double lon = modelMinX - 1e-1;
         const double lat = gridMinY + iQueriedY * gridResY;
-        EXPECT_TRUE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 tValid, newLon, newLat, newZ));
-        EXPECT_NEAR(RadToDeg(newLon), lon, EPS);
-        EXPECT_NEAR(RadToDeg(newLat), lat, EPS);
-        EXPECT_EQ(newZ, zVal);
+        EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
+                                  tValid, newLon, newLat, newZ));
     }
 
     // Longitude > model max
     {
         const double lon = modelMaxX + 1e-1;
         const double lat = gridMinY + iQueriedY * gridResY;
-        EXPECT_TRUE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 tValid, newLon, newLat, newZ));
-        EXPECT_NEAR(RadToDeg(newLon), lon, EPS);
-        EXPECT_NEAR(RadToDeg(newLat), lat, EPS);
-        EXPECT_EQ(newZ, zVal);
+        EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
+                                  tValid, newLon, newLat, newZ));
     }
 
     // Latitude < model min
     {
         const double lon = gridMinX + iQueriedX * gridResX;
         const double lat = modelMinY - 1e-1;
-        EXPECT_TRUE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 tValid, newLon, newLat, newZ));
-        EXPECT_NEAR(RadToDeg(newLon), lon, EPS);
-        EXPECT_NEAR(RadToDeg(newLat), lat, EPS);
-        EXPECT_EQ(newZ, zVal);
+        EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
+                                  tValid, newLon, newLat, newZ));
     }
 
     // Latitude > model max
     {
         const double lon = gridMinX + iQueriedX * gridResX;
-        const double lat = modelMaxY - 1e-1;
-        EXPECT_TRUE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 tValid, newLon, newLat, newZ));
-        EXPECT_NEAR(RadToDeg(newLon), lon, EPS);
-        EXPECT_NEAR(RadToDeg(newLat), lat, EPS);
-        EXPECT_EQ(newZ, zVal);
+        const double lat = modelMaxY + 1e-1;
+        EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
+                                  tValid, newLon, newLat, newZ));
     }
 
     // Before timeExtent.first
     {
         const double lon = gridMinX + iQueriedX * gridResX;
         const double lat = gridMinY + iQueriedY * gridResY;
-        EXPECT_TRUE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 1000, newLon, newLat, newZ));
-        EXPECT_NEAR(RadToDeg(newLon), lon, EPS);
-        EXPECT_NEAR(RadToDeg(newLat), lat, EPS);
-        EXPECT_EQ(newZ, zVal);
+        EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
+                                  1000, newLon, newLat, newZ));
     }
 
     // After timeExtent.last
     {
         const double lon = gridMinX + iQueriedX * gridResX;
         const double lat = gridMinY + iQueriedY * gridResY;
-        EXPECT_TRUE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
-                                 3000, newLon, newLat, newZ));
-        EXPECT_NEAR(RadToDeg(newLon), lon, EPS);
-        EXPECT_NEAR(RadToDeg(newLat), lat, EPS);
-        EXPECT_EQ(newZ, zVal);
+        EXPECT_FALSE(eval.forward(iface, DegToRad(lon), DegToRad(lat), zVal,
+                                  3000, newLon, newLat, newZ));
     }
 
     // Longitude < grid min
