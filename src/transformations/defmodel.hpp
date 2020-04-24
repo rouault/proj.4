@@ -600,6 +600,7 @@ struct EvaluatorIfaceConcept {
 
 // ---------------------------------------------------------------------------
 
+constexpr double DEFMODEL_PI = 3.14159265358979323846;
 constexpr double DEG_TO_RAD_CONSTANT = 3.14159265358979323846 / 180.;
 inline constexpr double DegToRad(double d) { return d * DEG_TO_RAD_CONSTANT; }
 
@@ -1366,10 +1367,10 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
                   // iface
         {
             while (x < extent.minxRad() - EPS) {
-                x += 2.0 * M_PI;
+                x += 2.0 * DEFMODEL_PI;
             }
             while (x > extent.maxxRad() + EPS) {
-                x -= 2.0 * M_PI;
+                x -= 2.0 * DEFMODEL_PI;
             }
         }
         if (x < extent.minxRad() - EPS || x > extent.maxxRad() + EPS ||
