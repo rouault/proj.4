@@ -60,4 +60,40 @@ accept 2 49 30 2020
 expect 2 49 33 2020
 roundtrip 1
 
+# Adjust for 360 degree longitude offsets
+operation   +proj=defmodel +model=tests/simple_model_metre_vertical.json
+tolerance 0.1 mm
+
+accept 362 49 30 2020
+expect 2 49 33 2020
+
+accept 722 49 30 2020
+expect 2 49 33 2020
+
+operation +proj=defmodel +model=tests/simple_model_wrap_east
+
+accept 165.9 -37.3 10 2020
+expect 165.9 -37.3 10.4525 2020
+
+operation +proj=defmodel +model=tests/simple_model_wrap_west
+
+accept 165.9 -37.3 10 2020
+expect 165.9 -37.3 10.4525 2020
+
+# Test geocentric bilinear interpolation method
+operation   +proj=defmodel +model=tests/simple_model_polar.json
+tolerance 0.1 mm
+
+accept  20 -90 15 2020
+expect 27.4743245365 -89.9999747721 18.0000 2020
+
+accept  120 -90 15 2020
+expect 27.4737934098 -89.9999747718 18.0000 2020
+
+accept  235 -89.5 15 2020
+expect -124.9986638571 -89.5000223708 17.3750 2020
+
+accept  45 -89.5 15 2020
+expect 44.9991295392 -89.4999759438 18.5469 2020
+
 </gie-strict>

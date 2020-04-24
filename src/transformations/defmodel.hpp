@@ -1358,9 +1358,15 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
 
     constexpr double EPS = 1e-10;
 
-    // Check against global model spatial extent
+    // Check against global model spatial extent, potentially wrapping
+    // longitude to match
     {
         const auto &extent = mModel->extent();
+        if( true ) // NOTE: Should test grid definition CRS is geographic, ? from iface
+        {
+            while( x < extent.minxRad() - EPS ){ x += 2.0*M_PI; }
+            while( x > extent.maxxRad() + EPS ){ x -= 2.0*M_PI; }
+        }
         if (x < extent.minxRad() - EPS || x > extent.maxxRad() + EPS ||
             y < extent.minyRad() - EPS || y > extent.maxyRad() + EPS) {
 #ifdef DEBUG_DEFMODEL
