@@ -56,10 +56,10 @@ struct Grid : public GridConcept {
 
     Grid(PJ_CONTEXT *ctxIn, const NS_PROJ::GenericShiftGrid *realGridIn)
         : ctx(ctxIn), realGrid(realGridIn) {
-        minxRad = realGridIn->extentAndRes().westLon;
-        minyRad = realGridIn->extentAndRes().southLat;
-        resxRad = realGridIn->extentAndRes().resLon;
-        resyRad = realGridIn->extentAndRes().resLat;
+        minxRad = realGridIn->extentAndRes().west;
+        minyRad = realGridIn->extentAndRes().south;
+        resxRad = realGridIn->extentAndRes().resX;
+        resyRad = realGridIn->extentAndRes().resY;
         width = realGridIn->width();
         height = realGridIn->height();
     }
