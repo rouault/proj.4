@@ -56,10 +56,10 @@ struct Grid : public GridConcept {
 
     Grid(PJ_CONTEXT *ctxIn, const NS_PROJ::GenericShiftGrid *realGridIn)
         : ctx(ctxIn), realGrid(realGridIn) {
-        minxRad = realGridIn->extentAndRes().west;
-        minyRad = realGridIn->extentAndRes().south;
-        resxRad = realGridIn->extentAndRes().resX;
-        resyRad = realGridIn->extentAndRes().resY;
+        minx = realGridIn->extentAndRes().west;
+        miny = realGridIn->extentAndRes().south;
+        resx = realGridIn->extentAndRes().resX;
+        resy = realGridIn->extentAndRes().resY;
         width = realGridIn->width();
         height = realGridIn->height();
     }
@@ -264,6 +264,18 @@ struct EvaluatorIface : public EvaluatorIfaceConcept<Grid, GridSet> {
             new GridSet(ctx, std::move(realGridSet)));
     }
 
+    bool isGeographicCRS(const std::string &crsDef) {
+        PJ *P = proj_create(ctx, crsDef.c_str());
+        if (P == nullptr) {
+            return true; // reasonable default value
+        }
+        const auto type = proj_get_type(P);
+        bool ret = (type == PJ_TYPE_GEOGRAPHIC_2D_CRS ||
+                    type == PJ_TYPE_GEOGRAPHIC_3D_CRS);
+        proj_destroy(P);
+        return ret;
+    }
+
     void geographicToGeocentric(double lam, double phi, double height, double a,
                                 double b, double /*es*/, double &X, double &Y,
                                 double &Z) {
@@ -412,7 +424,7 @@ PJ *TRANSFORMATION(defmodel, 1) {
 
     try {
         Q->evaluator.reset(new Evaluator<Grid, GridSet, EvaluatorIface>(
-            MasterFile::parse(jsonStr), P->a, P->b));
+            MasterFile::parse(jsonStr), Q->evaluatorIface, P->a, P->b));
     } catch (const std::exception &e) {
         proj_log_error(P, "defmodel: invalid model: %s", e.what());
         return destructor(P, PJD_ERR_INVALID_ARG);
@@ -421,8 +433,13 @@ PJ *TRANSFORMATION(defmodel, 1) {
     P->fwd4d = forward_4d;
     P->inv4d = reverse_4d;
 
-    P->left = PJ_IO_UNITS_RADIANS;
-    P->right = PJ_IO_UNITS_RADIANS;
+    if (Q->evaluator->isGeographicCRS()) {
+        P->left = PJ_IO_UNITS_RADIANS;
+        P->right = PJ_IO_UNITS_RADIANS;
+    } else {
+        P->left = PJ_IO_UNITS_PROJECTED;
+        P->right = PJ_IO_UNITS_PROJECTED;
+    }
 
     return P;
 }

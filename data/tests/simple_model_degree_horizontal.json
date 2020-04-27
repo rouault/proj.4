@@ -1,9 +1,9 @@
 {
   "file_type": "deformation_model_master_file",
   "format_version": "1.0",
-  "source_crs": "foo:ignored",
+  "source_crs": "EPSG:4326",
   "target_crs": "foo:ignored",
-  "definition_crs": "foo:ignored",
+  "definition_crs": "EPSG:4326",
   "horizontal_offset_unit": "degree",
   "horizontal_offset_method": "addition",
   "extent": {

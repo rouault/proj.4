@@ -207,6 +207,12 @@ TEST(defmodel, basic) {
 
     {
         json jcopy(jMinValid);
+        jcopy["definition_crs"] = "EPSG:4326";
+        EXPECT_THROW(MasterFile::parse(jcopy.dump()), ParsingException);
+    }
+
+    {
+        json jcopy(jMinValid);
         jcopy["file_type"] = 1;
         EXPECT_THROW(MasterFile::parse(jcopy.dump()), ParsingException);
     }
@@ -783,10 +789,10 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
         Grid grid{};
 
         GridSet() {
-            grid.minxRad = DegToRad(gridMinX);
-            grid.minyRad = DegToRad(gridMinY);
-            grid.resxRad = DegToRad(gridResX);
-            grid.resyRad = DegToRad(gridResY);
+            grid.minx = DegToRad(gridMinX);
+            grid.miny = DegToRad(gridMinY);
+            grid.resx = DegToRad(gridResX);
+            grid.resy = DegToRad(gridResY);
             grid.width =
                 1 + static_cast<int>(0.5 + (gridMaxX - gridMinX) / gridResX);
             grid.height =
@@ -803,6 +809,8 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
             return std::unique_ptr<GridSet>(new GridSet());
         }
 
+        bool isGeographicCRS(const std::string & /* crsDef */) { return true; }
+
 #ifdef DEBUG_DEFMODEL
         void log(const std::string & /* msg */) {}
 #endif
@@ -811,7 +819,7 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
     EvaluatorIface iface;
 
     Evaluator<Grid, GridSet, EvaluatorIface> eval(MasterFile::parse(j.dump()),
-                                                  1, 1);
+                                                  iface, 1, 1);
     double newLon;
     double newLat;
     double newZ;
@@ -960,7 +968,7 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
     j["components"][0]["displacement_type"] = "vertical";
     j["vertical_offset_unit"] = "metre";
     Evaluator<Grid, GridSet, EvaluatorIface> evalVertical(
-        MasterFile::parse(j.dump()), 1, 1);
+        MasterFile::parse(j.dump()), iface, 1, 1);
     {
         constexpr double alphaX = 0.25;
         constexpr double alphaY = 0.125;
@@ -984,7 +992,7 @@ TEST(defmodel, evaluator_horizontal_unit_degree) {
     j["components"][0]["displacement_type"] = "3d";
     j["vertical_offset_unit"] = "metre";
     Evaluator<Grid, GridSet, EvaluatorIface> eval3d(MasterFile::parse(j.dump()),
-                                                    1, 1);
+                                                    iface, 1, 1);
     {
         constexpr double alphaX = 0.25;
         constexpr double alphaY = 0.125;
@@ -1139,10 +1147,10 @@ TEST(defmodel, evaluator_horizontal_unit_metre) {
         Grid grid{};
 
         GridSet() {
-            grid.minxRad = DegToRad(gridMinX - extraPointX * gridResX);
-            grid.minyRad = DegToRad(gridMinY - extraPointY * gridResY);
-            grid.resxRad = DegToRad(gridResX);
-            grid.resyRad = DegToRad(gridResY);
+            grid.minx = DegToRad(gridMinX - extraPointX * gridResX);
+            grid.miny = DegToRad(gridMinY - extraPointY * gridResY);
+            grid.resx = DegToRad(gridResX);
+            grid.resy = DegToRad(gridResY);
             grid.width = 2 + extraPointX;
             grid.height = 2 + extraPointY;
         }
@@ -1156,6 +1164,8 @@ TEST(defmodel, evaluator_horizontal_unit_metre) {
                 return nullptr;
             return std::unique_ptr<GridSet>(new GridSet());
         }
+
+        bool isGeographicCRS(const std::string & /* crsDef */) { return true; }
 
 #ifdef DEBUG_DEFMODEL
         void log(const std::string & /* msg */) {}
@@ -1247,7 +1257,7 @@ TEST(defmodel, evaluator_horizontal_unit_metre) {
         j["components"][0]["spatial_model"]["interpolation_method"] =
             testPoint.interpolation_method;
         Evaluator<Grid, GridSet, EvaluatorIface> eval(
-            MasterFile::parse(j.dump()), a, b);
+            MasterFile::parse(j.dump()), iface, a, b);
 
         const double lon = testPoint.lon;
         const double lat = testPoint.lat;
@@ -1317,7 +1327,7 @@ TEST(defmodel, evaluator_horizontal_unit_metre) {
         j["components"][0]["spatial_model"]["interpolation_method"] =
             "bilinear";
         Evaluator<Grid, GridSet, EvaluatorIface> eval(
-            MasterFile::parse(j.dump()), a, b);
+            MasterFile::parse(j.dump()), iface, a, b);
 
         const double lon = 165.9;
         const double lat = -37.3;
@@ -1344,7 +1354,7 @@ TEST(defmodel, evaluator_horizontal_unit_metre) {
         j["components"][0]["spatial_model"]["interpolation_method"] =
             "bilinear";
         Evaluator<Grid, GridSet, EvaluatorIface> eval(
-            MasterFile::parse(j.dump()), a, b);
+            MasterFile::parse(j.dump()), iface, a, b);
 
         const double lon = gridMinX;
         const double lat = gridMinY;
@@ -1363,6 +1373,138 @@ TEST(defmodel, evaluator_horizontal_unit_metre) {
         EXPECT_NEAR(de, tFactor * expected_de, 1e-10);
         EXPECT_NEAR(dn, tFactor * expected_dn, 1e-10);
         EXPECT_NEAR(newZ - zVal, tFactor * 0.84, 1e-4);
+    }
+}
+
+// ---------------------------------------------------------------------------
+
+TEST(defmodel, evaluator_projected_crs) {
+
+    json j(getMinValidContent());
+    j["horizontal_offset_method"] = "addition";
+    j["horizontal_offset_unit"] = "metre";
+    j["vertical_offset_unit"] = "metre";
+    constexpr double gridMinX = 10000;
+    constexpr double gridMinY = 20000;
+    constexpr double gridMaxX = 30000;
+    constexpr double gridMaxY = 40000;
+    constexpr double gridResX = gridMaxX - gridMinX;
+    constexpr double gridResY = gridMaxY - gridMinY;
+
+    j["extent"]
+     ["parameters"] = {{"bbox", {modelMinX, modelMinY, modelMaxX, modelMaxY}}};
+    j["components"] = {
+        {{"displacement_type", "horizontal"},
+         {"uncertainty_type", "none"},
+         {"extent",
+          {{"type", "bbox"},
+           {"parameters",
+            {{"bbox", {gridMinX, gridMinY, gridMaxX, gridMaxY}}}}}},
+         {"spatial_model",
+          {
+              {"type", "GeoTIFF"},
+              {"interpolation_method", "bilinear"},
+              {"filename", "bla.tif"},
+          }},
+         {"time_function", {{"type", "constant"}}}}};
+
+    struct Grid : public GridConcept {
+        bool getEastingNorthingOffset(int ix, int iy, double &eastingOffset,
+                                      double &northingOffset) const {
+            if (ix == 0 && iy == 0) {
+                eastingOffset = 0.4;
+                northingOffset = -0.2;
+            } else if (ix == 1 && iy == 0) {
+                eastingOffset = 0.5;
+                northingOffset = -0.25;
+            } else if (ix == 0 && iy == 1) {
+                eastingOffset = 0.8;
+                northingOffset = -0.4;
+            } else if (ix == 1 && iy == 1) {
+                eastingOffset = 1.;
+                northingOffset = -0.3;
+            } else {
+                return false;
+            }
+            return true;
+        }
+
+#ifdef DEBUG_DEFMODEL
+        std::string name() const { return std::string(); }
+#endif
+    };
+
+    struct GridSet : public GridSetConcept<Grid> {
+
+        Grid grid{};
+
+        GridSet() {
+            grid.minx = gridMinX;
+            grid.miny = gridMinY;
+            grid.resx = gridResX;
+            grid.resy = gridResY;
+            grid.width = 2;
+            grid.height = 2;
+        }
+
+        const Grid *gridAt(double /*x */, double /* y */) { return &grid; }
+    };
+
+    struct EvaluatorIface : public EvaluatorIfaceConcept<Grid, GridSet> {
+        std::unique_ptr<GridSet> open(const std::string &filename) {
+            if (filename != "bla.tif")
+                return nullptr;
+            return std::unique_ptr<GridSet>(new GridSet());
+        }
+
+        bool isGeographicCRS(const std::string & /* crsDef */) { return false; }
+
+#ifdef DEBUG_DEFMODEL
+        void log(const std::string & /* msg */) {}
+#endif
+    };
+    EvaluatorIface iface;
+
+    constexpr double a = 6378137;
+    constexpr double b = 6356752.314140;
+    constexpr double tValid = 2018;
+    constexpr double zVal = 100;
+
+    Evaluator<Grid, GridSet, EvaluatorIface> eval(MasterFile::parse(j.dump()),
+                                                  iface, a, b);
+
+    double newX;
+    double newY;
+    double newZ;
+    EXPECT_TRUE(eval.forward(iface, gridMinX, gridMinY, zVal, tValid, newX,
+                             newY, newZ));
+    EXPECT_NEAR(newX - gridMinX, 0.4, 1e-8);
+    EXPECT_NEAR(newY - gridMinY, -0.2, 1e-8);
+    EXPECT_NEAR(newZ - zVal, 0, 1e-8);
+
+    {
+        json jcopy(j);
+        jcopy["horizontal_offset_unit"] = "degree";
+        EXPECT_THROW((Evaluator<Grid, GridSet, EvaluatorIface>(
+                         MasterFile::parse(jcopy.dump()), iface, a, b)),
+                     EvaluatorException);
+    }
+
+    {
+        json jcopy(j);
+        jcopy["horizontal_offset_method"] = "geocentric";
+        EXPECT_THROW((Evaluator<Grid, GridSet, EvaluatorIface>(
+                         MasterFile::parse(jcopy.dump()), iface, a, b)),
+                     EvaluatorException);
+    }
+
+    {
+        json jcopy(j);
+        jcopy["components"][0]["spatial_model"]["interpolation_method"] =
+            "geocentric_bilinear";
+        EXPECT_THROW((Evaluator<Grid, GridSet, EvaluatorIface>(
+                         MasterFile::parse(jcopy.dump()), iface, a, b)),
+                     EvaluatorException);
     }
 }
 

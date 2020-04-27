@@ -115,6 +115,7 @@ EXTRA_DIST = proj.ini GL27 nad.lst nad27 nad83 \
 		tests/simple_model_wrap_east.tif \
 		tests/simple_model_wrap_west.json \
 		tests/simple_model_wrap_west.tif \
+		tests/simple_model_projected.json \
 		generate_all_sql_in.cmake sql_filelist.cmake \
 		$(SQL_ORDERED_LIST)
 

@@ -104,10 +104,18 @@ class SpatialExtent {
     double maxx() const { return mMaxx; }
     double maxy() const { return mMaxy; }
 
-    double minxRad() const { return mMinxRad; }
-    double minyRad() const { return mMinyRad; }
-    double maxxRad() const { return mMaxxRad; }
-    double maxyRad() const { return mMaxyRad; }
+    double minxNormalized(bool bIsGeographic) const {
+        return bIsGeographic ? mMinxRad : mMinx;
+    }
+    double minyNormalized(bool bIsGeographic) const {
+        return bIsGeographic ? mMinyRad : mMiny;
+    }
+    double maxxNormalized(bool bIsGeographic) const {
+        return bIsGeographic ? mMaxxRad : mMaxx;
+    }
+    double maxyNormalized(bool bIsGeographic) const {
+        return bIsGeographic ? mMaxyRad : mMaxy;
+    }
 
   protected:
     friend class MasterFile;
@@ -503,10 +511,10 @@ const char *UnimplementedException::what() const noexcept {
 /** Concept for a Grid used by GridSet. Intended to be implemented
  * by user code */
 struct GridConcept {
-    double minxRad = 0;
-    double minyRad = 0;
-    double resxRad = 0;
-    double resyRad = 0;
+    double minx = 0;
+    double miny = 0;
+    double resx = 0;
+    double resy = 0;
     int width = 0;
     int height = 0;
 
@@ -591,6 +599,10 @@ struct EvaluatorIfaceConcept {
         throw UnimplementedException("geocentricToGeographic unimplemented");
     }
 
+    bool isGeographicCRS(const std::string & /* crsDef */) {
+        throw UnimplementedException("isGeographicCRS unimplemented");
+    }
+
 #ifdef DEBUG_DEFMODEL
     void log(const std::string & /* msg */) {
         throw UnimplementedException("log unimplemented");
@@ -638,10 +650,9 @@ template <class Grid> struct GridEx {
     double cosphi1 = 0;
 
     explicit GridEx(const Grid *gridIn)
-        : grid(gridIn), smallResx(grid->resxRad < DegToRad(1)),
-          sinhalfresx(sin(grid->resxRad / 2)),
-          coshalfresx(cos(grid->resxRad / 2)), sinresy(sin(grid->resyRad)),
-          cosresy(cos(grid->resyRad)) {}
+        : grid(gridIn), smallResx(grid->resx < DegToRad(1)),
+          sinhalfresx(sin(grid->resx / 2)), coshalfresx(cos(grid->resx / 2)),
+          sinresy(sin(grid->resy)), cosresy(cos(grid->resy)) {}
 
     // Return geocentric offset (dX, dY, dZ) relative to a point
     // where x0 = -resx / 2
@@ -657,7 +668,7 @@ template <class Grid> struct GridEx {
 
             last_ix0 = ix0;
             if (iy0 != last_iy0) {
-                const double y0 = grid->minyRad + iy0 * grid->resyRad;
+                const double y0 = grid->miny + iy0 * grid->resy;
                 sinphi0 = sin(y0);
                 cosphi0 = cos(y0);
 
@@ -770,13 +781,28 @@ template <class Grid, class GridSet> struct ComponentEx {
 
 // ---------------------------------------------------------------------------
 
+/** Evaluator exception. */
+class EvaluatorException : public std::exception {
+  public:
+    EvaluatorException(const std::string &msg) : msg_(msg) {}
+    const char *what() const noexcept override;
+
+  private:
+    std::string msg_;
+};
+
+const char *EvaluatorException::what() const noexcept { return msg_.c_str(); }
+
+// ---------------------------------------------------------------------------
+
 /** Class to evaluate the transformation of a coordinate */
 template <class Grid = GridConcept, class GridSet = GridSetConcept<>,
           class EvaluatorIface = EvaluatorIfaceConcept<>>
 class Evaluator {
   public:
-    /** Constructor */
-    explicit Evaluator(std::unique_ptr<MasterFile> &&model, double a, double b);
+    /** Constructor. May throw EvaluatorException */
+    explicit Evaluator(std::unique_ptr<MasterFile> &&model,
+                       EvaluatorIface &iface, double a, double b);
 
     /** Evaluate displacement of a position given by (x,y,z,t) and
      * return it in (x_out,y_out_,z_out).
@@ -793,6 +819,9 @@ class Evaluator {
     /** Clear grid cache */
     void clearGridCache();
 
+    /** Return whether the definition CRS is a geographic CRS */
+    bool isGeographicCRS() const { return mIsGeographicCRS; }
+
   private:
     std::unique_ptr<MasterFile> mModel;
     const double mA;
@@ -800,6 +829,7 @@ class Evaluator {
     const double mEs;
     const bool mIsHorizontalUnitDegree; /* degree vs metre */
     const bool mIsAddition;             /* addition vs geocentric */
+    const bool mIsGeographicCRS;
 
     std::vector<ComponentEx<Grid, GridSet>> mComponents{};
 };
@@ -980,6 +1010,10 @@ std::unique_ptr<MasterFile> MasterFile::parse(const std::string &text) {
     dmmf->mSourceCRS = getReqString(j, "source_crs");
     dmmf->mTargetCRS = getReqString(j, "target_crs");
     dmmf->mDefinitionCRS = getReqString(j, "definition_crs");
+    if (dmmf->mSourceCRS != dmmf->mDefinitionCRS) {
+        throw ParsingException(
+            "source_crs != definition_crs not currently supported");
+    }
     dmmf->mReferenceEpoch = getOptString(j, "reference_epoch");
     dmmf->mUncertaintyReferenceEpoch =
         getOptString(j, "uncertainty_reference_epoch");
@@ -1308,13 +1342,30 @@ inline void DeltaEastingNorthingToLongLat(double cosphi, double de, double dn,
 
 template <class Grid, class GridSet, class EvaluatorIface>
 Evaluator<Grid, GridSet, EvaluatorIface>::Evaluator(
-    std::unique_ptr<MasterFile> &&model, double a, double b)
+    std::unique_ptr<MasterFile> &&model, EvaluatorIface &iface, double a,
+    double b)
     : mModel(std::move(model)), mA(a), mB(b), mEs(1 - (b * b) / (a * a)),
       mIsHorizontalUnitDegree(mModel->horizontalOffsetUnit() == STR_DEGREE),
-      mIsAddition(mModel->horizontalOffsetMethod() == STR_ADDITION) {
+      mIsAddition(mModel->horizontalOffsetMethod() == STR_ADDITION),
+      mIsGeographicCRS(iface.isGeographicCRS(mModel->definitionCRS())) {
+    if (!mIsGeographicCRS && mIsHorizontalUnitDegree) {
+        throw EvaluatorException(
+            "definition_crs = projected CRS and "
+            "horizontal_offset_unit = degree are incompatible");
+    }
+    if (!mIsGeographicCRS && !mIsAddition) {
+        throw EvaluatorException(
+            "definition_crs = projected CRS and "
+            "horizontal_offset_method = geocentric are incompatible");
+    }
     mComponents.reserve(mModel->components().size());
     for (const auto &comp : mModel->components()) {
         mComponents.emplace_back(ComponentEx<Grid, GridSet>(comp));
+        if (!mIsGeographicCRS && !mComponents.back().isBilinearInterpolation) {
+            throw EvaluatorException(
+                "definition_crs = projected CRS and "
+                "interpolation_method = geocentric_bilinear are incompatible");
+        }
     }
 }
 
@@ -1357,24 +1408,24 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
     y_out = y;
     z_out = z;
 
-    constexpr double EPS = 1e-10;
+    const double EPS = mIsGeographicCRS ? 1e-10 : 1e5;
 
     // Check against global model spatial extent, potentially wrapping
     // longitude to match
     {
         const auto &extent = mModel->extent();
-        if (true) // NOTE: Should test grid definition CRS is geographic, ? from
-                  // iface
-        {
-            while (x < extent.minxRad() - EPS) {
+        if (mIsGeographicCRS) {
+            while (x < extent.minxNormalized(mIsGeographicCRS) - EPS) {
                 x += 2.0 * DEFMODEL_PI;
             }
-            while (x > extent.maxxRad() + EPS) {
+            while (x > extent.maxxNormalized(mIsGeographicCRS) + EPS) {
                 x -= 2.0 * DEFMODEL_PI;
             }
         }
-        if (x < extent.minxRad() - EPS || x > extent.maxxRad() + EPS ||
-            y < extent.minyRad() - EPS || y > extent.maxyRad() + EPS) {
+        if (x < extent.minxNormalized(mIsGeographicCRS) - EPS ||
+            x > extent.maxxNormalized(mIsGeographicCRS) + EPS ||
+            y < extent.minyNormalized(mIsGeographicCRS) - EPS ||
+            y > extent.maxyNormalized(mIsGeographicCRS) + EPS) {
 #ifdef DEBUG_DEFMODEL
             iface.log("Calculation point " + toString(x) + "," + toString(y) +
                       " is outside the extents of the deformation model");
@@ -1416,8 +1467,10 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
             continue;
         }
         const auto &extent = comp.extent();
-        if (x < extent.minxRad() - EPS || x > extent.maxxRad() + EPS ||
-            y < extent.minyRad() - EPS || y > extent.maxyRad() + EPS) {
+        if (x < extent.minxNormalized(mIsGeographicCRS) - EPS ||
+            x > extent.maxxNormalized(mIsGeographicCRS) + EPS ||
+            y < extent.minyNormalized(mIsGeographicCRS) - EPS ||
+            y > extent.maxyNormalized(mIsGeographicCRS) + EPS) {
 #ifdef DEBUG_DEFMODEL
             iface.log(
                 "Skipping component " + shortName(comp) +
@@ -1457,8 +1510,8 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
         if (grid->width < 2 || grid->height < 2) {
             return false;
         }
-        const double ix_d = (x - grid->minxRad) / grid->resxRad;
-        const double iy_d = (y - grid->minyRad) / grid->resyRad;
+        const double ix_d = (x - grid->minx) / grid->resx;
+        const double iy_d = (y - grid->miny) / grid->resy;
         if (ix_d < -EPS || iy_d < -EPS || ix_d + 1 >= grid->width + EPS ||
             iy_d + 1 >= grid->height + EPS) {
 #ifdef DEBUG_DEFMODEL
@@ -1623,7 +1676,7 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
                     cosphi = cos(y);
                 }
                 const double lam_rel_to_cell_center =
-                    (frct_x - 0.5) * grid->resxRad;
+                    (frct_x - 0.5) * grid->resx;
                 // Use small-angle approximation of sin/cos when reasonable
                 // Max abs/rel error on cos is 3.9e-9 and on sin 1.3e-11
                 const double sinlam =
@@ -1668,7 +1721,10 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
         iface.log("Total sum of de: " + toString(de));
         iface.log("Total sum of dn: " + toString(dn));
 #endif
-        if (mIsAddition) {
+        if (mIsAddition && !mIsGeographicCRS) {
+            x_out += de;
+            y_out += dn;
+        } else if (mIsAddition) {
             // Simple way of adding the offset
             if (!sincosphiInitialized) {
                 cosphi = cos(y);
