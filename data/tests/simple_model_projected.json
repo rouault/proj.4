@@ -1,9 +1,9 @@
 {
   "file_type": "deformation_model_master_file",
   "format_version": "1.0",
-  "source_crs": "EPSG:32631",
+  "source_crs": "EPSG:2193",
   "target_crs": "foo:ignored",
-  "definition_crs": "EPSG:32631",
+  "definition_crs": "EPSG:2193",
   "horizontal_offset_unit": "metre",
   "horizontal_offset_method": "addition",
   "vertical_offset_unit": "metre",
@@ -11,10 +11,10 @@
     "type": "bbox",
     "parameters": {
       "bbox": [
-        -180,
-        -90,
-        180,
-        90
+        1500000.0,
+        5400000.0,
+        1501000.0,
+        5401000.0
       ]
     }
   },
@@ -31,10 +31,10 @@
         "type": "bbox",
         "parameters": {
           "bbox": [
-            -180,
-            -90,
-            180,
-            90
+            1500000.0,
+            5400000.0,
+            1501000.0,
+            5401000.0
           ]
         }
       },
