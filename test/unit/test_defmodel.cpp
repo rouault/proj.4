@@ -1392,7 +1392,7 @@ TEST(defmodel, evaluator_projected_crs) {
     constexpr double gridResY = gridMaxY - gridMinY;
 
     j["extent"]
-     ["parameters"] = {{"bbox", {modelMinX, modelMinY, modelMaxX, modelMaxY}}};
+     ["parameters"] = {{"bbox", {gridMinX, gridMinY, gridMaxX, gridMaxY}}};
     j["components"] = {
         {{"displacement_type", "horizontal"},
          {"uncertainty_type", "none"},

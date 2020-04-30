@@ -1408,7 +1408,7 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
     y_out = y;
     z_out = z;
 
-    const double EPS = mIsGeographicCRS ? 1e-10 : 1e5;
+    const double EPS = mIsGeographicCRS ? 1e-10 : 1e-5;
 
     // Check against global model spatial extent, potentially wrapping
     // longitude to match
