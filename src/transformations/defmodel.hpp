@@ -810,7 +810,9 @@ class Evaluator {
      * longitude, and y a latitude.
      */
     bool forward(EvaluatorIface &iface, double x, double y, double z, double t,
-                 double &x_out, double &y_out, double &z_out);
+                 double &x_out, double &y_out, double &z_out) {
+        return forward(iface, x, y, z, t, false, x_out, y_out, z_out);
+    }
 
     /** Apply inverse transformation. */
     bool inverse(EvaluatorIface &iface, double x, double y, double z, double t,
@@ -830,6 +832,10 @@ class Evaluator {
     const bool mIsHorizontalUnitDegree; /* degree vs metre */
     const bool mIsAddition;             /* addition vs geocentric */
     const bool mIsGeographicCRS;
+
+    bool forward(EvaluatorIface &iface, double x, double y, double z, double t,
+                 bool forInverseComputation, double &x_out, double &y_out,
+                 double &z_out);
 
     std::vector<ComponentEx<Grid, GridSet>> mComponents{};
 };
@@ -1398,34 +1404,77 @@ static std::string toString(double val) {
 
 // ---------------------------------------------------------------------------
 
+static bool bboxCheck(double &x, double &y, bool forInverseComputation,
+                      const double minx, const double miny, const double maxx,
+                      const double maxy, const double EPS,
+                      const double extraMarginForInverse) {
+    if (x < minx - EPS || x > maxx + EPS || y < miny - EPS || y > maxy + EPS) {
+        if (!forInverseComputation) {
+            return false;
+        }
+        // In case of iterative computation for inverse, allow to be a
+        // slightly bit outside of the grid and clamp to the edges
+        bool xOk = false;
+        if (x >= minx - EPS && x <= maxx + EPS) {
+            xOk = true;
+        } else if (x > minx - extraMarginForInverse && x < minx) {
+            x = minx;
+            xOk = true;
+        } else if (x < maxx + extraMarginForInverse && x > maxx) {
+            x = maxx;
+            xOk = true;
+        }
+
+        bool yOk = false;
+        if (y >= miny - EPS && y <= maxy + EPS) {
+            yOk = true;
+        } else if (y > miny - extraMarginForInverse && y < miny) {
+            y = miny;
+            yOk = true;
+        } else if (y < maxy + extraMarginForInverse && y > maxy) {
+            y = maxy;
+            yOk = true;
+        }
+
+        return xOk && yOk;
+    }
+    return true;
+}
+
+// ---------------------------------------------------------------------------
+
 template <class Grid, class GridSet, class EvaluatorIface>
 bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
     EvaluatorIface &iface, double x, double y, double z, double t,
-    double &x_out, double &y_out, double &z_out)
+    bool forInverseComputation, double &x_out, double &y_out, double &z_out)
 
 {
     x_out = x;
     y_out = y;
     z_out = z;
 
-    const double EPS = mIsGeographicCRS ? 1e-10 : 1e5;
+    const double EPS = mIsGeographicCRS ? 1e-10 : 1e-5;
 
     // Check against global model spatial extent, potentially wrapping
     // longitude to match
     {
         const auto &extent = mModel->extent();
+        const double minx = extent.minxNormalized(mIsGeographicCRS);
+        const double maxx = extent.maxxNormalized(mIsGeographicCRS);
         if (mIsGeographicCRS) {
-            while (x < extent.minxNormalized(mIsGeographicCRS) - EPS) {
+            while (x < minx - EPS) {
                 x += 2.0 * DEFMODEL_PI;
             }
-            while (x > extent.maxxNormalized(mIsGeographicCRS) + EPS) {
+            while (x > maxx + EPS) {
                 x -= 2.0 * DEFMODEL_PI;
             }
         }
-        if (x < extent.minxNormalized(mIsGeographicCRS) - EPS ||
-            x > extent.maxxNormalized(mIsGeographicCRS) + EPS ||
-            y < extent.minyNormalized(mIsGeographicCRS) - EPS ||
-            y > extent.maxyNormalized(mIsGeographicCRS) + EPS) {
+        const double miny = extent.minyNormalized(mIsGeographicCRS);
+        const double maxy = extent.maxyNormalized(mIsGeographicCRS);
+        const double extraMarginForInverse =
+            mIsGeographicCRS ? DegToRad(0.1) : 10000;
+        if (!bboxCheck(x, y, forInverseComputation, minx, miny, maxx, maxy, EPS,
+                       extraMarginForInverse)) {
 #ifdef DEBUG_DEFMODEL
             iface.log("Calculation point " + toString(x) + "," + toString(y) +
                       " is outside the extents of the deformation model");
@@ -1467,10 +1516,15 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
             continue;
         }
         const auto &extent = comp.extent();
-        if (x < extent.minxNormalized(mIsGeographicCRS) - EPS ||
-            x > extent.maxxNormalized(mIsGeographicCRS) + EPS ||
-            y < extent.minyNormalized(mIsGeographicCRS) - EPS ||
-            y > extent.maxyNormalized(mIsGeographicCRS) + EPS) {
+        double xForGrid = x;
+        double yForGrid = y;
+        const double minx = extent.minxNormalized(mIsGeographicCRS);
+        const double maxx = extent.maxxNormalized(mIsGeographicCRS);
+        const double miny = extent.minyNormalized(mIsGeographicCRS);
+        const double maxy = extent.maxyNormalized(mIsGeographicCRS);
+        const double extraMarginForInverse = 0;
+        if (!bboxCheck(xForGrid, yForGrid, forInverseComputation, minx, miny,
+                       maxx, maxy, EPS, extraMarginForInverse)) {
 #ifdef DEBUG_DEFMODEL
             iface.log(
                 "Skipping component " + shortName(comp) +
@@ -1478,6 +1532,10 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
 #endif
             continue;
         }
+        xForGrid = std::max(xForGrid, minx);
+        yForGrid = std::max(yForGrid, miny);
+        xForGrid = std::min(xForGrid, maxx);
+        yForGrid = std::min(yForGrid, maxy);
         const auto tfactor = compEx.evaluateAt(t);
         if (tfactor == 0.0) {
 #ifdef DEBUG_DEFMODEL
@@ -1499,7 +1557,7 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
                 return false;
             }
         }
-        const Grid *grid = compEx.gridSet->gridAt(x, y);
+        const Grid *grid = compEx.gridSet->gridAt(xForGrid, yForGrid);
         if (grid == nullptr) {
 #ifdef DEBUG_DEFMODEL
             iface.log("Skipping component " + shortName(comp) +
@@ -1510,8 +1568,8 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::forward(
         if (grid->width < 2 || grid->height < 2) {
             return false;
         }
-        const double ix_d = (x - grid->minx) / grid->resx;
-        const double iy_d = (y - grid->miny) / grid->resy;
+        const double ix_d = (xForGrid - grid->minx) / grid->resx;
+        const double iy_d = (yForGrid - grid->miny) / grid->resy;
         if (ix_d < -EPS || iy_d < -EPS || ix_d + 1 >= grid->width + EPS ||
             iy_d + 1 >= grid->height + EPS) {
 #ifdef DEBUG_DEFMODEL
@@ -1794,12 +1852,23 @@ bool Evaluator<Grid, GridSet, EvaluatorIface>::inverse(
     z_out = z;
     constexpr double EPS_HORIZ = 1e-12;
     constexpr double EPS_VERT = 1e-3;
+    constexpr bool forInverseComputation = true;
     for (int i = 0; i < 10; i++) {
+#ifdef DEBUG_DEFMODEL
+        iface.log("Iteration " + std::to_string(i) + ": before foward: x=" +
+                  toString(x_out) + ", y=" + toString(y_out));
+#endif
         double x_new;
         double y_new;
         double z_new;
-        if (!forward(iface, x_out, y_out, z_out, t, x_new, y_new, z_new))
+        if (!forward(iface, x_out, y_out, z_out, t, forInverseComputation,
+                     x_new, y_new, z_new)) {
             return false;
+        }
+#ifdef DEBUG_DEFMODEL
+        iface.log("After foward: x=" + toString(x_new) + ", y=" +
+                  toString(y_new));
+#endif
         const double dx = x_new - x;
         const double dy = y_new - y;
         const double dz = z_new - z;
