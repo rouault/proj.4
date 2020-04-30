@@ -54,11 +54,13 @@ accept 1500200.0 5400400.0 30 2020
 expect 1500200.588 5400399.722 30.6084 2020
 roundtrip 1
 
+# South-west corner
 accept 1500000.0 5400000.0 30 2020
 expect 1500000.4 5399999.8 30.84 2020
 
-accept 1500999.9999 5400999.9999 30 2020
-expect 1501000.9999 5400999.6999 30 2020
+# North east corner
+accept 1501000.0 5401000.0 30 2020
+expect 1501001.0 5400999.7 30 2020
 
 # Test geocentric addition of components
 operation   +proj=pipeline +step +inv +proj=merc +step +proj=defmodel +model=tests/simple_model_metre_3d_geocentric.json +step +proj=merc
