@@ -18,8 +18,9 @@ Triangulated Irregular Network)
 
 The motivation for this work is to be able to handle the official transformations
 created by National Land Survey of Finland, for:
+
 - horizontal transformation between the KKJ and ETRS89 horizontal datums
-- vertical transformations betwen N43 and N60 heights, and N60 and N2000 heights.
+- vertical transformations between N43 and N60 heights, and N60 and N2000 heights.
 
 Such transformations are somehow related to traditional grid-based transformations,
 except that the correction values are hold by the vertices of the triangulation,
@@ -33,7 +34,7 @@ Grid-based transformations remain very convenient to use because accessing
 correction values is really easy and efficient, so triangulation-based transformations
 are not meant as replacing them, but more about it being a complement, that is
 sometimes necessary to be able to replicate the results of a officially vetted
-transformation to a milimetric or better precision (speaking here about reproducibility
+transformation to a millimetric or better precision (speaking here about reproducibility
 of numeric results, rather than the physical accuracy of the transformation that
 might rather be centimetric). It is always possible to approach the result of
 the triangulation with a grid, but that may require to adopt a small grid step,
@@ -53,7 +54,7 @@ describing the input and output CRS of the transformation. Depending on the cont
 of the JSON file, horizontal, vertical or both components of the coordinates may
 be transformed.
 
-So, in its most simple invokation, the transformation is used like:
+So, in its most simple invocation, the transformation is used like:
 
 ::
 
@@ -61,7 +62,7 @@ So, in its most simple invokation, the transformation is used like:
 
     21.8181756139   59.8602955636        0.0000           inf
 
-The transformation is inversible, with the same computational complexity than
+The transformation is invertible, with the same computational complexity than
 the forward transformation.
 
 The KKJ to ETRS89 transformation has the particularity that the vertices are
@@ -92,12 +93,12 @@ Algorithm
 +++++++++
 
 Internally, ``tinshift`` ingest the whole file into memory. It is considered that
-triangulation should be small enough for that. The above mentionned KKJ to ETRS89
+triangulation should be small enough for that. The above mentioned KKJ to ETRS89
 triangulation fits into 65 KB of JSON, for 1449 triangles and 767 vertices.
 
 When a point is transformed, one must find the triangle into which it falls into.
-Instead of iterating over all triangles, we build a in-memory quadree to speed-up
-the identification of candiates triangles. On the above mentionned KKJ -> ETRS89
+Instead of iterating over all triangles, we build a in-memory quadtree to speed-up
+the identification of candidates triangles. On the above mentioned KKJ -> ETRS89
 triangulation, this speeds up the whole transformation by a factor of 10. The
 quadtree structure is a very good compromise between the performance gain it brings
 and the simplicity of its implementation (we have ported the implementation coming
@@ -144,7 +145,7 @@ more numerically robust when interpolating projected coordinates of amplitude of
 order of 1e5 / 1e6, due to computations involving differences of coordinates.
 Whereas the formulation with the A, B, C, D, E, F tends to have big values for
 the A and D constants, and values clause to 0 for C and E, and close to 1 for
-B and F. However, the difference between the two approaches is neglectable for
+B and F. However, the difference between the two approaches is negligible for
 practical purposes (below micrometre precision)
 
 Similarly for a vertical coordinate transformation, where :math:`Zoff_i` is the vertical
@@ -249,11 +250,12 @@ So after the generic metadata, we define the various CRS to consider for the
 transformation, and that the transformation affects horizontal components of
 coordinates. We name the columns of the ``vertices`` and ``triangles`` arrays.
 We defined the source and target coordinates of each vertex, and define a
-triangle by refering to the index of its vertices in the ``vertices`` array.
+triangle by referring to the index of its vertices in the ``vertices`` array.
 
 More formally, the specific items for the triangulation file are:
 
-- ``triangulation_source_crs``: String identifying the CRS of source coordinates
+triangulation_source_crs
+  String identifying the CRS of source coordinates
   in the vertices. Typically ``EPSG:XXXX``. If the transformation is for vertical
   component, this should be the code for a compound CRS (can be EPSG:XXXX+YYYY
   where XXXX is the code of the horizontal CRS and YYYY the code of the vertical CRS).
@@ -263,7 +265,8 @@ More formally, the specific items for the triangulation file are:
   for a unspecified projected CRS.
 
 
-- ``triangulation_target_crs``: String identifying the CRS of target coordinates
+triangulation_target_crs
+  String identifying the CRS of target coordinates
   in the vertices. Typically ``EPSG:XXXX``. If the transformation is for vertical
   component, this should be the code for a compound CRS (can be EPSG:XXXX+YYYY
   where XXXX is the code of the horizontal CRS and YYYY the code of the vertical CRS).
@@ -273,7 +276,8 @@ More formally, the specific items for the triangulation file are:
   unspecified projected CRS
 
 
-- ``input_crs``: String identifying the CRS of input coordinates of the
+input_crs
+  String identifying the CRS of input coordinates of the
   transformation. This may be different from triangulation_source_crs. For
   example, for the KKJ->ETRS89 transformation, this is EPSG:4123 (KKJ geographic).
   When input_crs and triangulation_source_crs are specified, input coordinates
@@ -287,7 +291,8 @@ More formally, the specific items for the triangulation file are:
   whole transformation pipeline)
 
 
-- ``output_crs``: String identifying the CRS of output coordinates of the
+output_crs
+  String identifying the CRS of output coordinates of the
   transformation. This may be different from triangulation_target_crs. For example,
   for the KKJ->ETRS89 transformation, this is EPSG:4258 (ETRS89 geographic).
   When triangulation_target_crs and output_crs are specified, output coordinates
@@ -298,12 +303,14 @@ More formally, the specific items for the triangulation file are:
   projected coordinates.
 
 
-- ``transformed_components``: array which may contain one or two strings:
-  ``horizontal`` when horizontal components of the coordinates are
-  transformed and/ofr ``vertical`` when the vertical component is transformed.
+transformed_components
+  Array which may contain one or two strings: "horizontal" when horizontal
+  components of the coordinates are transformed and/or "vertical" when the
+  vertical component is transformed.
 
 
-- ``vertices_columns``: Specify the name of the columns of the rows in the ``vertices``
+vertices_columns
+  Specify the name of the columns of the rows in the ``vertices``
   array. There must be exactly as many elements in ``vertices_columns`` as in a
   row of ``vertices``. The following names have a special meaning: ``source_x``,
   ``source_y``, ``target_x``, ``target_y``, ``source_z``, ``target_z`` and
@@ -315,17 +322,20 @@ More formally, the specific items for the triangulation file are:
   ``offset_z`` are compulsory when ``vertical`` is specified in ``transformed_components``
 
 
-- ``triangles_columns``: Specify the name of the columns of the rows in the
+triangles_columns
+  Specify the name of the columns of the rows in the
   ``triangles`` array. There must be exactly as many elements in ``triangles_columns``
   as in a row of ``triangles``. The following names have a special meaning:
   ``idx_vertex1``, ``idx_vertex2``, ``idx_vertex3``. They are compulsory.
 
 
-- ``vertices``: an array whose items are themselves arrays with as many columns as
+vertices
+  An array whose items are themselves arrays with as many columns as
   described in ``vertices_columns``.
-  
 
-- ``triangles``: an array whose items are themselves arrays with as many columns as
+
+triangles
+  An array whose items are themselves arrays with as many columns as
   described in ``triangles_columns``.
   The value of the ``idx_vertexN`` columns must be indices
   (between 0 and len(``vertices``-1) of items of the ``vertices`` array.
@@ -365,7 +375,7 @@ For comparison, the Helmert-based KKJ to ETRS89 transformation operates at
 A triangulation with about 115 000 triangles and 71 000 vertices (still without
 the geographic <--> projected conversions) operates at 2.2 million points / sec
 (throughput on more points would be better since the initial loading of the
-triangulation is non neglectable here)
+triangulation is non-negligible here)
 
 Backward compatibility
 -------------------------------------------------------------------------------
@@ -381,7 +391,7 @@ new .gie file, and a C++ unit test to test at a lower level.
 Documentation
 -------------------------------------------------------------------------------
 
-- The thinshift method will be documented.
+- The tinshift method will be documented.
 - The JSON format will be documented under https://proj.org/specifications/
 - A JSON schema will also be provided.
 
