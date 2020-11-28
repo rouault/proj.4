@@ -25,38 +25,37 @@ jobs:
             key: ${{ runner.os }}-vcpkg-${{ hashFiles('.github/workflows/windows.yml') }}
 
       - name: Install build requirements
-        shell: cmd
+        shell: bash -l {0}
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
+            set -e
             vcpkg install sqlite3[core,tool]:${{ env.ARCH }}-windows
             vcpkg install tiff:${{ env.ARCH }}-windows
             vcpkg install curl:${{ env.ARCH }}-windows
 
       - name: Build
-        shell: cmd
+        shell: bash -l {0}
         run: |
-            set VCPKG_INSTALLED=c:\vcpkg\installed\${{ env.ARCH }}-windows
-            dir %VCPKG_INSTALLED%\bin
-            set PATH=%VCPKG_INSTALLED%\bin;%PATH%
-            set PROJ_BUILD=%GITHUB_WORKSPACE%\build
-            mkdir %PROJ_BUILD%
-            cd %PROJ_BUILD%
-            set PROJ_DIR=%GITHUB_WORKSPACE%\proj_dir
-            cmake -GNinja .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS="{{ env.BUILD_SHARED_LIBS }}" -DCMAKE_C_FLAGS="/WX" -DCMAKE_CXX_FLAGS="/WX" -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX="%PROJ_DIR%"
+            set -e
+            export VCPKG_INSTALLED=/c/vcpkg/installed/${{ env.ARCH }}-windows
+            echo $PATH
+            export PATH=$VCPKG_INSTALLED/bin:$PATH
+            export PROJ_BUILD=$GITHUB_WORKSPACE/build
+            mkdir $PROJ_BUILD
+            cd $PROJ_BUILD
+            export PROJ_DIR=$GITHUB_WORKSPACE/proj_dir
+            cmake -GNinja .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS="{{ env.BUILD_SHARED_LIBS }}" -DCMAKE_C_FLAGS="/WX" -DCMAKE_CXX_FLAGS="/WX" -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX="$PROJ_DIR"
             ninja -v
             ninja install
-            dir %PROJ_DIR%\bin
+            ls -al $PROJ_DIR/bin
 
       - name: Run tests
-        shell: cmd
+        shell: bash -l {0}
         run: |
-            set VCPKG_INSTALLED=c:\vcpkg\installed\${{ env.ARCH }}-windows
-            set PATH=%VCPKG_INSTALLED%\bin;%PATH%
-            set PROJ_DIR=%GITHUB_WORKSPACE%\proj_dir
-            set PROJ_LIB=%PROJ_DIR%\share\proj
-            set PROJ_BUILD=%GITHUB_WORKSPACE%\build
-            cd %PROJ_BUILD%
+            set -e
+            export PROJ_LIB=$PROJ_DIR/share/proj
+            cd $PROJ_BUILD
             ctest -V -C Release
-            set PATH=%PROJ_DIR%\bin;%PATH%
-            call %GITHUB_WORKSPACE%\test\postinstall\test_cmake.bat %PROJ_DIR%
+            export PATH=$PROJ_DIR/bin:$PATH
+            cmd /c $GITHUB_WORKSPACE/test/postinstall/test_cmake.bat $PROJ_DIR
             proj
