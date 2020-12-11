@@ -10609,6 +10609,41 @@ CoordinateOperationNNPtr ConcatenatedOperation::createComputeMetadata(
             flattenOps.emplace_back(subOp);
         }
     }
+
+    // Remove consecutive inverse operations
+    if (flattenOps.size() > 2) {
+        std::vector<size_t> indices;
+        for (size_t i = 0; i < flattenOps.size(); ++i)
+            indices.push_back(i);
+        while (true) {
+            bool bHasChanged = false;
+            for (size_t i = 0; i + 1 < indices.size(); ++i) {
+                if (flattenOps[indices[i]]->_isEquivalentTo(
+                        flattenOps[indices[i + 1]]->inverse().get(),
+                        util::IComparable::Criterion::EQUIVALENT) &&
+                    flattenOps[indices[i]]->sourceCRS()->_isEquivalentTo(
+                        flattenOps[indices[i + 1]]->targetCRS().get(),
+                        util::IComparable::Criterion::EQUIVALENT)) {
+                    indices.erase(indices.begin() + i, indices.begin() + i + 2);
+                    bHasChanged = true;
+                    break;
+                }
+            }
+            // We bail out if indices.size() == 2, because potentially
+            // the last 2 remaining ones could auto-cancel, and we would have
+            // to have a special case for that (and this happens in practice).
+            if (!bHasChanged || indices.size() <= 2)
+                break;
+        }
+        if (indices.size() < flattenOps.size()) {
+            std::vector<CoordinateOperationNNPtr> flattenOpsNew;
+            for (size_t i = 0; i < indices.size(); ++i) {
+                flattenOpsNew.emplace_back(flattenOps[indices[i]]);
+            }
+            flattenOps = std::move(flattenOpsNew);
+        }
+    }
+
     if (flattenOps.size() == 1) {
         return flattenOps[0];
     }
@@ -14926,47 +14961,26 @@ void CoordinateOperationFactory::Private::createOperationsBoundToBound(
     auto hubSrcGeog = dynamic_cast<const crs::GeographicCRS *>(hubSrc.get());
     const auto &hubDst = boundDst->hubCRS();
     auto hubDstGeog = dynamic_cast<const crs::GeographicCRS *>(hubDst.get());
-    auto geogCRSOfBaseOfBoundSrc = boundSrc->baseCRS()->extractGeographicCRS();
-    auto geogCRSOfBaseOfBoundDst = boundDst->baseCRS()->extractGeographicCRS();
     if (hubSrcGeog && hubDstGeog &&
         hubSrcGeog->_isEquivalentTo(hubDstGeog,
-                                    util::IComparable::Criterion::EQUIVALENT) &&
-        geogCRSOfBaseOfBoundSrc && geogCRSOfBaseOfBoundDst) {
-        const bool firstIsNoOp = geogCRSOfBaseOfBoundSrc->_isEquivalentTo(
-            boundSrc->baseCRS().get(),
-            util::IComparable::Criterion::EQUIVALENT);
-        const bool lastIsNoOp = geogCRSOfBaseOfBoundDst->_isEquivalentTo(
-            boundDst->baseCRS().get(),
-            util::IComparable::Criterion::EQUIVALENT);
-        auto opsFirst = createOperations(
-            boundSrc->baseCRS(), NN_NO_CHECK(geogCRSOfBaseOfBoundSrc), context);
-        auto opsLast = createOperations(NN_NO_CHECK(geogCRSOfBaseOfBoundDst),
-                                        boundDst->baseCRS(), context);
-        if (!opsFirst.empty() && !opsLast.empty()) {
-            const auto &opSecond = boundSrc->transformation();
-            auto opThird = boundDst->transformation()->inverse();
-            for (const auto &opFirst : opsFirst) {
-                for (const auto &opLast : opsLast) {
-                    try {
-                        std::vector<CoordinateOperationNNPtr> ops;
-                        if (!firstIsNoOp) {
-                            ops.push_back(opFirst);
-                        }
-                        ops.push_back(opSecond);
-                        ops.push_back(opThird);
-                        if (!lastIsNoOp) {
-                            ops.push_back(opLast);
-                        }
-                        res.emplace_back(
-                            ConcatenatedOperation::createComputeMetadata(
-                                ops, disallowEmptyIntersection));
-                    } catch (const InvalidOperationEmptyIntersection &) {
-                    }
+                                    util::IComparable::Criterion::EQUIVALENT)) {
+        auto opsFirst = createOperations(sourceCRS, hubSrc, context);
+        auto opsLast = createOperations(hubSrc, targetCRS, context);
+        for (const auto &opFirst : opsFirst) {
+            for (const auto &opLast : opsLast) {
+                try {
+                    std::vector<CoordinateOperationNNPtr> ops;
+                    ops.push_back(opFirst);
+                    ops.push_back(opLast);
+                    res.emplace_back(
+                        ConcatenatedOperation::createComputeMetadata(
+                            ops, disallowEmptyIntersection));
+                } catch (const InvalidOperationEmptyIntersection &) {
                 }
             }
-            if (!res.empty()) {
-                return;
-            }
+        }
+        if (!res.empty()) {
+            return;
         }
     }
 

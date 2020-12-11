@@ -4234,7 +4234,8 @@ createBoundCRSSourceTransformationCRS(const crs::CRSPtr &sourceCRS,
                             sourceGeographicCRS->datum()->ellipsoid(),
                             util::optional<std::string>(),
                             datum::PrimeMeridian::GREENWICH),
-                        sourceGeographicCRS->coordinateSystem())
+                        cs::EllipsoidalCS::createLatitudeLongitude(
+                            common::UnitOfMeasure::DEGREE))
                         .as_nullable();
             }
         } else {
