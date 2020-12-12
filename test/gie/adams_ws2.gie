@@ -2165,6 +2165,8 @@ accept    -179.999     89.999
 expect    -693320.702  16030515.904
 roundtrip  1
 
+# 9 mm needed on x86 in -O1
+tolerance 9 mm
 accept    -179.999     -89.999
 expect    -693320.704  -16030515.906
 roundtrip  1
