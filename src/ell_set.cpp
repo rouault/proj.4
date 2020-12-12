@@ -247,11 +247,12 @@ static int ellps_shape (PJ *P) {
 
     /* Not giving a shape parameter means selecting a sphere, unless shape */
     /* has been selected previously via ellps=xxx */
-    if (nullptr==par && P->es != 0)
-        return 0;
-    if (nullptr==par && P->es==0) {
-        P->es = P->f = 0;
-        P->b = P->a;
+    if (nullptr==par )
+    {
+        if( P->es==0) {
+            P->es = P->f = 0;
+            P->b = P->a;
+        }
         return 0;
     }
 
