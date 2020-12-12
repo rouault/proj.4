@@ -21,8 +21,8 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 pip3 install --user jsonschema
 export PATH=$HOME/.local/bin:$PATH
 
-export CXXFLAGS='-g -O2 -m32 -D_GLIBCXX_ASSERTIONS'
-export CFLAGS='-g -O2 -m32'
+export CXXFLAGS='-g -O1 -m32 -D_GLIBCXX_ASSERTIONS'
+export CFLAGS='-g -O1 -m32'
 export TIFF_CFLAGS=-I/usr/include/i386-linux-gnu
 export TIFF_LIBS="-L/usr/lib/i386-linux-gnu -ltiff"
 export SQLITE3_CFLAGS=-I/usr/include/i386-linux-gnu
