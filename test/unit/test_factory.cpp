@@ -3022,6 +3022,117 @@ TEST_F(FactoryWithTmpDatabase,
 
 // ---------------------------------------------------------------------------
 
+TEST_F(FactoryWithTmpDatabase, AuthorityFactory_time_limit) {
+    createStructure();
+
+    const char *const statements[] = {
+        "DROP TABLE metadata;",
+        "CREATE VIEW v0 AS SELECT 0 AS key, NULL AS value UNION ALL SELECT 1 "
+        "AS key, NULL AS value;",
+        "CREATE VIEW v1 AS SELECT key*2 AS key, value FROM v0 UNION ALL SELECT "
+        "key*2+1 AS key, value FROM v0;",
+        "CREATE VIEW v2 AS SELECT key*2 AS key, value FROM v1 UNION ALL SELECT "
+        "key*2+1 AS key, value FROM v1;",
+        "CREATE VIEW v3 AS SELECT key*2 AS key, value FROM v2 UNION ALL SELECT "
+        "key*2+1 AS key, value FROM v2;",
+        "CREATE VIEW v4 AS SELECT key*2 AS key, value FROM v3 UNION ALL SELECT "
+        "key*2+1 AS key, value FROM v3;",
+        "CREATE VIEW v5 AS SELECT key*2 AS key, value FROM v4 UNION ALL SELECT "
+        "key*2+1 AS key, value FROM v4;",
+        "CREATE VIEW v6 AS SELECT key*2 AS key, value FROM v5 UNION ALL SELECT "
+        "key*2+1 AS key, value FROM v5;",
+        "CREATE VIEW v7 AS SELECT key*2 AS key, value FROM v6 UNION ALL SELECT "
+        "key*2+1 AS key, value FROM v6;",
+        "CREATE VIEW v8 AS SELECT key*2 AS key, value FROM v7 UNION ALL SELECT "
+        "key*2+1 AS key, value FROM v7;",
+        "CREATE VIEW v9 AS SELECT key*2 AS key, value FROM v8 UNION ALL SELECT "
+        "key*2+1 AS key, value FROM v8;",
+        "CREATE VIEW v10 AS SELECT key*2 AS key, value FROM v9 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v9;",
+        "CREATE VIEW v11 AS SELECT key*2 AS key, value FROM v10 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v10;",
+        "CREATE VIEW v12 AS SELECT key*2 AS key, value FROM v11 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v11;",
+        "CREATE VIEW v13 AS SELECT key*2 AS key, value FROM v12 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v12;",
+        "CREATE VIEW v14 AS SELECT key*2 AS key, value FROM v13 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v13;",
+
+        "CREATE TABLE v15(key INTEGER PRIMARY KEY, value TEXT);",
+        "INSERT INTO v15 SELECT key*2 AS key, value FROM v14 UNION ALL SELECT "
+        "key*2+1 AS key, value FROM v14;",
+
+        "CREATE VIEW v16 AS SELECT key*2 AS key, value FROM v15 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v15;",
+        "CREATE VIEW v17 AS SELECT key*2 AS key, value FROM v16 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v16;",
+        "CREATE VIEW v18 AS SELECT key*2 AS key, value FROM v17 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v17;",
+        "CREATE VIEW v19 AS SELECT key*2 AS key, value FROM v18 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v18;",
+        "CREATE VIEW v20 AS SELECT key*2 AS key, value FROM v19 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v19;",
+        "CREATE VIEW v21 AS SELECT key*2 AS key, value FROM v20 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v20;",
+        "CREATE VIEW v22 AS SELECT key*2 AS key, value FROM v21 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v21;",
+        "CREATE VIEW v23 AS SELECT key*2 AS key, value FROM v22 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v22;",
+        "CREATE VIEW v24 AS SELECT key*2 AS key, value FROM v23 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v23;",
+        "CREATE VIEW v25 AS SELECT key*2 AS key, value FROM v24 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v24;",
+        "CREATE VIEW v26 AS SELECT key*2 AS key, value FROM v25 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v25;",
+        "CREATE VIEW v27 AS SELECT key*2 AS key, value FROM v26 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v26;",
+        "CREATE VIEW v28 AS SELECT key*2 AS key, value FROM v27 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v27;",
+        "CREATE VIEW v29 AS SELECT key*2 AS key, value FROM v28 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v28;",
+        "CREATE VIEW v30 AS SELECT key*2 AS key, value FROM v29 UNION ALL "
+        "SELECT key*2+1 AS key, value FROM v29;",
+
+        "CREATE VIEW metadata AS SELECT key*2 AS key, value FROM v30 WHERE key "
+        "= -1;",
+    };
+
+    for (const auto &sql : statements) {
+        ASSERT_TRUE(execute(sql)) << sql;
+    }
+
+    // Should time out because of the huge execution time of selecting in
+    // metadata view
+    EXPECT_THROW(DatabaseContext::create(m_ctxt), FactoryException);
+}
+
+// ---------------------------------------------------------------------------
+
+TEST_F(FactoryWithTmpDatabase, AuthorityFactory_max_string_length) {
+    createStructure();
+
+    const char *const statements[] = {
+        "CREATE TABLE metadata_backup(key TEXT, value TEXT);",
+        "INSERT INTO metadata_backup SELECT key, value FROM metadata;",
+        "DROP TABLE metadata;",
+        "CREATE VIEW metadata AS "
+        "SELECT key, printf('%123456789s', value) AS value FROM "
+        "metadata_backup WHERE key = 'DATABASE.LAYOUT.VERSION.MAJOR' "
+        "UNION ALL SELECT key, value FROM metadata_backup WHERE key = "
+        "'DATABASE.LAYOUT.VERSION.MINOR';",
+    };
+
+    for (const auto &sql : statements) {
+        ASSERT_TRUE(execute(sql)) << sql;
+    }
+
+    // Should fail because of the large mem requirement of the printf() in the
+    // above SQL
+    EXPECT_THROW(DatabaseContext::create(m_ctxt), FactoryException);
+}
+
+// ---------------------------------------------------------------------------
+
 TEST(factory, createObjectsFromName) {
     auto ctxt = DatabaseContext::create();
     auto factory = AuthorityFactory::create(ctxt, std::string());

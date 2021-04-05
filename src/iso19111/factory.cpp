@@ -72,6 +72,7 @@
 // clang-format on
 
 #include <sqlite3.h>
+#include <time.h>
 
 // Custom SQLite VFS as our database is not supposed to be modified in
 // parallel. This is slightly faster
@@ -322,7 +323,7 @@ struct DatabaseContext::Private {
     void clearCaches();
 
     // cppcheck-suppress functionStatic
-    void registerFunctions();
+    void registerFunctionsAndLimits();
 
     std::string findFreeCode(const std::string &tableName,
                              const std::string &authName,
@@ -707,7 +708,7 @@ void DatabaseContext::Private::open(const std::string &databasePath,
     }
 
     databasePath_ = path;
-    registerFunctions();
+    registerFunctionsAndLimits();
 }
 
 // ---------------------------------------------------------------------------
@@ -797,7 +798,7 @@ void DatabaseContext::Private::setHandle(sqlite3 *sqlite_handle) {
     sqlite_handle_ = sqlite_handle;
     close_handle_ = false;
 
-    registerFunctions();
+    registerFunctionsAndLimits();
 }
 
 // ---------------------------------------------------------------------------
@@ -861,6 +862,8 @@ void DatabaseContext::Private::attachExtraDatabases(
         throw FactoryException("cannot create in memory database");
     }
 
+    registerFunctionsAndLimits();
+
     run("ATTACH DATABASE '" + replaceAll(databasePath_, "'", "''") +
         "' AS db_0");
     detach_ = true;
@@ -910,8 +913,6 @@ void DatabaseContext::Private::attachExtraDatabases(
         }
         run(sql);
     }
-
-    registerFunctions();
 }
 
 // ---------------------------------------------------------------------------
@@ -987,7 +988,11 @@ static void PROJ_SQLITE_intersects_bbox(sqlite3_context *pContext,
 #define SQLITE_DETERMINISTIC 0
 #endif
 
-void DatabaseContext::Private::registerFunctions() {
+void DatabaseContext::Private::registerFunctionsAndLimits() {
+    // 1 MB is still a large value for our purposes, but if only setting 100 KB,
+    // ATTACH DATABASE fails.
+    sqlite3_limit(sqlite_handle_, SQLITE_LIMIT_LENGTH, 1000 * 1000);
+
     sqlite3_create_function(sqlite_handle_, "pseudo_area_from_swne", 4,
                             SQLITE_UTF8 | SQLITE_DETERMINISTIC, nullptr,
                             PROJ_SQLITE_pseudo_area_from_swne, nullptr,
@@ -1000,9 +1005,64 @@ void DatabaseContext::Private::registerFunctions() {
 
 // ---------------------------------------------------------------------------
 
+class SQLite3TimeLimiter {
+    SQLite3TimeLimiter(SQLite3TimeLimiter &) = delete;
+    SQLite3TimeLimiter &operator=(SQLite3TimeLimiter &) = delete;
+
+    sqlite3 *handle_;
+    PJ_CONTEXT *ctx_;
+    time_t startTime_;
+    int timeLimit_;
+
+    static int getTimeLimitStatic() {
+        const char *timeLimit = getenv("PROJ_SQLITE_TIME_LIMIT");
+        if (timeLimit == nullptr) {
+            constexpr int DEFAULT_TIMEOUT_IN_SECOND = 1;
+            return DEFAULT_TIMEOUT_IN_SECOND;
+        }
+        return atoi(timeLimit);
+    }
+
+    static int getTimeLimit() {
+        static const int timeLimitStatic = getTimeLimitStatic();
+        return timeLimitStatic;
+    }
+
+    static int progress(void *data) {
+        const auto cbk = static_cast<const SQLite3TimeLimiter *>(data);
+        const time_t curTime = time(nullptr);
+        const int interrupt =
+            curTime - cbk->startTime_ <= cbk->timeLimit_ ? 0 : 1;
+        if (interrupt != 0 && cbk->ctx_ != nullptr) {
+            pj_log(cbk->ctx_, PJ_LOG_ERROR,
+                   "Current sqlite3 request took more than %d second. "
+                   "This value can be adjusted with the PROJ_SQLITE_TIME_LIMIT "
+                   "environment variable.",
+                   cbk->timeLimit_);
+        }
+        return interrupt;
+    }
+
+  public:
+    SQLite3TimeLimiter(sqlite3 *handle, PJ_CONTEXT *ctx)
+        : handle_(handle), ctx_(ctx), startTime_(time(nullptr)),
+          timeLimit_(getTimeLimit()) {
+        if (timeLimit_ > 0) {
+            sqlite3_progress_handler(handle_, 100000, progress, this);
+        }
+    }
+
+    ~SQLite3TimeLimiter() {
+        sqlite3_progress_handler(handle_, 0, nullptr, nullptr);
+    }
+};
+
+// ---------------------------------------------------------------------------
+
 SQLResultSet DatabaseContext::Private::run(const std::string &sql,
                                            const ListOfParams &parameters,
                                            bool useMaxFloatPrecision) {
+    const SQLite3TimeLimiter timeLimiter(sqlite_handle_, pjCtxt_);
 
     sqlite3_stmt *stmt = nullptr;
     auto iter = mapSqlToStatement_.find(sql);
@@ -2881,6 +2941,7 @@ void DatabaseContext::stopInsertStatementsSession() {
 DatabaseContextNNPtr DatabaseContext::create(void *sqlite_handle) {
     auto ctxt = DatabaseContext::nn_make_shared<DatabaseContext>();
     ctxt->getPrivate()->setHandle(static_cast<sqlite3 *>(sqlite_handle));
+    ctxt->getPrivate()->checkDatabaseLayout(std::string(), std::string());
     return ctxt;
 }
 
