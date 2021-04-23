@@ -293,6 +293,10 @@ include_directories(${PROJ_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 source_group("CMake Files" FILES CMakeLists.txt)
 
+if("${NLOHMANN_JSON}" EQUAL "external")
+add_definitions(-DEXTERNAL_NLOHMANN_JSON)
+include_directories(${NLOHMANN_JSON_INCLUDE_DIRS})
+endif()
 
 # Embed PROJ_LIB data files location
 add_definitions(-DPROJ_LIB="${CMAKE_INSTALL_PREFIX}/${DATADIR}")

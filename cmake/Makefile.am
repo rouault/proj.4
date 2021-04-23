@@ -10,5 +10,7 @@ EXTRA_DIST = CMakeLists.txt \
 			proj_config.cmake.in \
 			project-config-version.cmake.in \
 			project-config.cmake.in \
-			FindSqlite3.cmake
+			FindSqlite3.cmake \
+			Findnlohmann_json.cmake \
+			ParseVersion.cmake
 
