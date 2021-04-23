@@ -1,19 +1,21 @@
 name: coverity-scan
 
 # Controls when the action will run. 
-on:
-  # Run this action on a schedule (we're allowed a maximum of two per day)
-  schedule:
-    - cron: '0 18 * * SUN' # Sunday at 18:00 UTC
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+on: [push, pull_request]
+#on:
+#  # Run this action on a schedule (we're allowed a maximum of two per day)
+#  schedule:
+#    - cron: '0 18 * * SUN' # Sunday at 18:00 UTC
+#
+#  # Allows you to run this workflow manually from the Actions tab
+#  workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
     runs-on: ubuntu-20.04
-    if: github.repository == 'OSGeo/PROJ'
+    #if: github.repository == 'OSGeo/PROJ'
     steps:
       - uses: actions/checkout@v2
 
