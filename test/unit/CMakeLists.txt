@@ -60,11 +60,6 @@ include_directories(${SQLITE3_INCLUDE_DIR})
 # Add the directory containing proj_config.h
 include_directories(${PROJ_BINARY_DIR}/src)
 
-if("${NLOHMANN_JSON}" EQUAL "external")
-add_definitions(-DEXTERNAL_NLOHMANN_JSON)
-include_directories(${NLOHMANN_JSON_INCLUDE_DIRS})
-endif()
-
 # Apply to targets in the current directory and below
 add_compile_options(${PROJ_CXX_WARN_FLAGS})
 
